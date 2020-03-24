@@ -35,7 +35,7 @@ services:
   pgpool:
     image: bitnami/pgpool:4
     ports:
-      - 6789:5432
+      - 5432
     environment:
       - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
       - PGPOOL_SR_CHECK_USER=customuser
