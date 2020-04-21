@@ -1,0 +1,209 @@
+\documentclass[12pt]{article}
+
+\usepackage{scicite,times,graphicx,float,hyperref}
+\usepackage[skip=0pt]{caption}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREAMBLE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\topmargin -1.0cm
+\oddsidemargin 0.0cm
+\textwidth 16cm 
+\textheight 23cm
+\footskip 1.0cm
+
+\newenvironment{sciabstract}{%
+\begin{quote} \bf}
+{\end{quote}}
+
+\newcounter{lastnote}
+\newenvironment{scilastnote}{%
+  \setcounter{lastnote}{\value{enumiv}}%
+  \addtocounter{lastnote}{+1}%
+  \begin{list}%
+  {\arabic{lastnote}.}
+  {\setlength{\leftmargin}{.22in}}
+  {\setlength{\labelsep}{.5em}}
+}
+{\end{list}}
+
+\title{Intermediate Report on:\\Pretix Cluster Deployment \& Management} 
+
+\author
+{Filipe Pires [85122], João Alegria [85048]\\
+\\
+Computational Infrastructures Management\\
+\normalsize{Department of Electronics, Telecommunications and Informatics}\\
+\normalsize{University of Aveiro}\\
+} 
+
+\date{\today{}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document} 
+
+\baselineskip18pt
+
+\maketitle 
+
+\section*{Introduction} \label{introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This report aims to describe the work developed for the ...
+
+All code developed is publicly accessible in our GitHub repository:
+
+\url{https://github.com/FilipePires98/GIC}.
+
+\newpage
+\section{Pretix Ticketing Software} \label{pretix} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% what is pretix?
+
+...
+
+\subsection{Our Product} \label{pretix.product} %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% what is our purpose? what are we offering?
+
+...
+
+\subsection{Use Case Scenario} \label{pretix.scenario} %%%%%%%%%%%%%%%%%%%
+
+...
+
+%\texttt{java -cp <userdir>/build/classes fi.FarmInfrastructure}
+
+% \vspace{-10pt}
+% \begin{itemize}[noitemsep]
+%   \item ...
+% \end{itemize}
+% \vspace{-10pt}
+
+% \vspace{-10pt}
+% \begin{enumerate}[noitemsep]
+%   \item ...
+% \end{enumerate}
+% \vspace{-10pt}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{minipage}{\textwidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{img/.....png}
+%   \end{minipage}%
+%   \caption{...}
+%   \label{...}
+% \end{figure} 
+
+\newpage
+\section{Clustering Strategy} \label{strategy} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Architecture} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%
+
+% what are the dependencies? what components does the cluster have?
+
+...
+
+\subsection{Distribution} \label{strategy.distribution} %%%%%%%%%%%%%%%%%%
+
+% how exactly is the system being distributed?
+
+...
+
+\subsection{Deployment} \label{strategy.deployment} %%%%%%%%%%%%%%%%%%%%%%
+
+% how exactly is the system being deployed?
+
+...
+
+\newpage
+\section{Current Cluster Performance} \label{performance} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% what was done to evaluate its current performance?
+
+...
+
+\subsection{Benchmarking} \label{performance.benchmarking} %%%%%%%%%%%%%%%
+
+% how was the benchmarking done?
+
+...
+
+\subsection{Bottlenecks} \label{performance.bottlenecks} %%%%%%%%%%%%%%%%%
+
+% what performance bottlenecks were found?
+
+...
+
+\newpage
+\section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Planning Phase 2} \label{remarks.planning} %%%%%%%%%%%%%%%%%%%
+
+% what is to be done until the final delivery?
+
+...
+
+\subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%
+
+% what documentation was produced?
+
+...
+
+\subsection{Assignment Contributions} \label{remarks.contributions} %%%%%%
+
+% who did what?
+
+Regarding the work distribution amongst developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according 
+to a predefined plan. 
+The cluster strategy and respective details were decided in conjunction, as well as the key objectives and tasks to be achieved before the final delivery deadline.
+... were also implemented collectively.
+
+Nevertheless, some relatively independent task distribution was defined: ...
+Bug and error solving was made along the development phase by both developers any time it was required.
+
+Once performance benchmarking and bottleneck identification were completed, this report and the code documentation became our primary concern, with both 
+contributing equally.
+
+\newpage
+\section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+...
+
+\begin{thebibliography}{9} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \bibliographystyle{Science}
+
+  \bibitem{assign}
+    João Paulo Barraca,
+    \textit{GIC: Practical Assignment no.1},
+    University of Aveiro,
+    2019/20.
+
+\end{thebibliography}
+
+\clearpage
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
