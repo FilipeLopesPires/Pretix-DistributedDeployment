@@ -1,9 +1,7 @@
-version: '3'
+version: '3.3'
 services:
   pg-0:
-    image: bitnami/postgresql-repmgr:11
-    ports:
-      - 5432
+    image: bitnami/postgresql-repmgr
     volumes:
       - pg_0_data:/bitnami/postgresql
     environment:
@@ -17,9 +15,7 @@ services:
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
   pg-1:
-    image: bitnami/postgresql-repmgr:11
-    ports:
-      - 5432
+    image: bitnami/postgresql-repmgr
     volumes:
       - pg_1_data:/bitnami/postgresql
     environment:
@@ -34,8 +30,11 @@ services:
       - REPMGR_NODE_NETWORK_NAME=pg-1
   pgpool:
     image: bitnami/pgpool:4
+    depends_on:
+      - pg-0
+      - pg-1
     ports:
-      - 5432
+      - 5432:5432
     environment:
       - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
       - PGPOOL_SR_CHECK_USER=customuser
@@ -51,29 +50,87 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-        image: redis:4-alpine
-        container_name: pretix_cache
-        restart: always
-        command: redis-server /usr/local/etc/redis/redis.conf
-        volumes:
-            - redisData:/usr/local/etc/redis/redis.conf
+
+  redis-master:
+    image: 'bitnami/redis:5.0.2'
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_REPLICATION_MODE=master 
+      - REDIS_PASSWORD=pass
+    deploy:
+      mode: global
+      restart_policy:
+        condition: any
+    volumes:
+      - 'redis:/opt/bitnami/redis/etc/'
+
+  redis-replica:
+    image: 'bitnami/redis:5.0.2'
+    ports:
+      - '6379'
+    depends_on:
+      - redis-master
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=pass
+      - REDIS_PASSWORD=pass
+    deploy:
+      mode: replicated
+      replicas: 6
+      update_config:
+        parallelism: 1
+        delay: 20s
+      restart_policy:
+        condition: any
+
+  redis-sentinel:
+    image: 'bitnami/redis:5.0.2'
+    ports:
+      - '16379'
+    depends_on:
+      - redis-master
+      - redis-replica
+    entrypoint: |
+      bash -c 'bash -s <<EOF
+      "/bin/bash" -c "cat <<EOF > /opt/bitnami/redis/etc/sentinel.conf
+      port 16379
+      dir /tmp
+      sentinel monitor master-node redis-master 6379 2
+      sentinel down-after-milliseconds master-node 5000
+      sentinel parallel-syncs master-node 1
+      sentinel failover-timeout master-node 5000
+      sentinel auth-pass master-node pass
+      sentinel announce-ip redis-sentinel
+      sentinel announce-port 16379
+      EOF"     
+      "/bin/bash" -c "redis-sentinel /opt/bitnami/redis/etc/sentinel.conf"    
+      EOF'
+    deploy:
+      mode: global
+      restart_policy:
+        condition: any
+        
   web:
-      image: pretix/standalone:stable
-      container_name: pretix_server
-      restart: always
-      depends_on:
-          - pgpool
-          - redis
-      ports:
-          - "8888:80"
-      volumes:
-          - ./pretix.cfg:/etc/pretix/pretix.cfg
+    image: pretix/standalone:stable
+    container_name: pretix_server
+    restart: always
+    depends_on:
+        - pgpool
+        - redis-master
+    ports:
+        - "8888:80"
+    volumes:
+        - ./pretix.cfg:/etc/pretix/pretix.cfg
+    deploy:
+      mode: replicated
+      replicas: 2
 
 volumes:
-  redisData:
-      external: false
-      driver: local
+  redis:
+    driver: local
   pg_0_data:
     driver: local
   pg_1_data:

@@ -1,0 +1,6 @@
+export DOCKER_HOST="tcp://10.2.0.1:2375"
+
+pontos de swarmpit:
+http://10.2.0.1:888/ 
+http://10.1.0.1:888/
+http://10.4.0.1:888/

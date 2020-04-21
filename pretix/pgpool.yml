@@ -1,0 +1,53 @@
+version: '3.3'
+services:
+    pgmaster:
+        image: paunin/postgresql-cluster-pgsql
+        environment:
+            - INITIAL_NODE_TYPE=master
+            - NODE_ID=1
+            - NODE_NAME=node1
+            - CLUSTER_NODE_NETWORK_NAME=pgmaster
+            - POSTGRES_PASSWORD=monkey_pass
+            - POSTGRES_USER=monkey_user
+            - POSTGRES_DB=monkey_db
+            - CLUSTER_NODE_REGISTER_DELAY=5
+            - REPLICATION_DAEMON_START_DELAY=120
+            - CLUSTER_NAME=pg_cluster
+            - REPLICATION_DB=replication_db
+            - REPLICATION_USER=replication_user
+            - REPLICATION_PASSWORD=replication_pass
+        ports:
+            - 5432:5432
+ 
+    pgslave1:
+        image: paunin/postgresql-cluster-pgsql
+        environment:
+            - INITIAL_NODE_TYPE=standby
+            - NODE_ID=2
+            - NODE_NAME=node2
+            - REPLICATION_PRIMARY_HOST=pgmaster
+            - CLUSTER_NODE_NETWORK_NAME=pgslave1
+            - REPLICATION_UPSTREAM_NODE_ID=1
+        ports:
+            - 5441:5432
+        depends_on:
+          - pgmaster
+
+    pgpool:
+        image: paunin/postgresql-cluster-pgpool
+        environment:
+            - PCP_USER=pcp_user
+            - PCP_PASSWORD=pcp_pass
+            - PGPOOL_START_DELAY=120
+            - REPLICATION_USER=replication_user
+            - REPLICATION_PASSWORD=replication_pass
+            - SEARCH_PRIMARY_NODE_TIMEOUT=5
+            - REQUIRE_MIN_BACKENDS=2
+            - DB_USERS=monkey_user:monkey_pass
+            - BACKENDS="0:pgmaster:5432:1:/var/lib/postgresql/data:ALLOW_TO_FAILOVER,1:pgslave1::::"
+        ports:
+            - 5430:5432
+            - 9898:9898
+
+
+
