@@ -1,9 +1,9 @@
 version: '3.3'
 services:
   pg-0:
-    image: bitnami/postgresql-repmgr
-    volumes:
-      - pg_0_data:/bitnami/postgresql
+    image: bitnami/postgresql-repmgr:11
+    expose:
+      - 5432
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customuser
@@ -11,13 +11,18 @@ services:
       - POSTGRESQL_DATABASE=customdatabase
       - REPMGR_PASSWORD=repmgrpassword
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
-  pg-1:
-    image: bitnami/postgresql-repmgr
     volumes:
-      - pg_1_data:/bitnami/postgresql
+      - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+
+  pg-1:
+    image: bitnami/postgresql-repmgr:11
+    expose:
+      - 5432
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customuser
@@ -25,18 +30,39 @@ services:
       - POSTGRESQL_DATABASE=customdatabase
       - REPMGR_PASSWORD=repmgrpassword
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
+    volumes:
+      - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+
+  pg-2:
+    image: bitnami/postgresql-repmgr:11
+    expose:
+      - 5432
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=pg-2
+    volumes:
+      - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+
   pgpool:
     image: bitnami/pgpool:4
-    depends_on:
-      - pg-0
-      - pg-1
     ports:
-      - 5432:5432
+      - 7232:5432
     environment:
-      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
+      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432,2:pg-2:5432
       - PGPOOL_SR_CHECK_USER=customuser
       - PGPOOL_SR_CHECK_PASSWORD=custompassword
       - PGPOOL_ENABLE_LDAP=no
@@ -44,94 +70,108 @@ services:
       - PGPOOL_POSTGRES_PASSWORD=adminpassword
       - PGPOOL_ADMIN_USERNAME=admin
       - PGPOOL_ADMIN_PASSWORD=adminpassword
-    healthcheck:
-      test: ["CMD", "/healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+    networks:
+      - pretixPgNetwork
+      - pretixOut
 
+  # haproxynode1:
+  #   image: jayjohnson/haproxy-redis
+  #   environment:
+  #     - NODE_TYPE=master
+  #     - NODE_SUPERVISOR_NAME=haproxy
+  #     - NODE_EXPOSE_PORT=6379
+  #     - CLUSTER_NAME=redis-cluster
+  #     - NUM_INSTANCES=3
+  #     - BASE_HOSTNAME=redisnode1
+  #     - BASE_REDIS_PORT=9001
+  #     - BASE_SENTINEL_PORT=19001
+  #     - CLUSTERED=0
 
-  redis-master:
-    image: 'bitnami/redis:5.0.2'
-    ports:
-      - '6379:6379'
+  redisnode1:
+    image: jayjohnson/redis-haproxy-clusterable
     environment:
-      - REDIS_REPLICATION_MODE=master 
-      - REDIS_PASSWORD=pass
-    deploy:
-      mode: global
-      restart_policy:
-        condition: any
-    volumes:
-      - 'redis:/opt/bitnami/redis/etc/'
-
-  redis-replica:
-    image: 'bitnami/redis:5.0.2'
+      - CLUSTER_NAME=redis-cluster
+      - NODE_TYPE=master
+      - IP_BIND=0.0.0.0
+      - MASTER_REDIS_HOST=redisnode1
+      - MASTER_REDIS_PORT=6379
+      - REDIS_PORT=6379
+      - SENTINEL_PORT=6378
+      - SENTINEL_INSTANCES_FOR_QUORUM=2
+      - SENTINEL_DOWN_IN_MILLISECONDS=5000
+      - SENTINEL_FAILOVER_TIMEOUT=10000
+      - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
+      - CLUSTERED=0
     ports:
-      - '6379'
-    depends_on:
-      - redis-master
+      - 7279:6379
+    networks:
+      - pretixRedisNetwork
+      - pretixOut
+
+  redisnode2:
+    image: jayjohnson/redis-haproxy-clusterable
     environment:
-      - REDIS_REPLICATION_MODE=slave
-      - REDIS_MASTER_HOST=redis-master
-      - REDIS_MASTER_PORT_NUMBER=6379
-      - REDIS_MASTER_PASSWORD=pass
-      - REDIS_PASSWORD=pass
-    deploy:
-      mode: replicated
-      replicas: 6
-      update_config:
-        parallelism: 1
-        delay: 20s
-      restart_policy:
-        condition: any
+      - CLUSTER_NAME=redis-cluster
+      - NODE_TYPE=node2
+      - IP_BIND=0.0.0.0
+      - MASTER_REDIS_HOST=redisnode1
+      - MASTER_REDIS_PORT=6379
+      - REDIS_PORT=6379
+      - SENTINEL_PORT=6378
+      - SENTINEL_INSTANCES_FOR_QUORUM=2
+      - SENTINEL_DOWN_IN_MILLISECONDS=5000
+      - SENTINEL_FAILOVER_TIMEOUT=10000
+      - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
+      - CLUSTERED=0
+    networks:
+      - pretixRedisNetwork
 
-  redis-sentinel:
-    image: 'bitnami/redis:5.0.2'
-    ports:
-      - '16379'
-    depends_on:
-      - redis-master
-      - redis-replica
-    entrypoint: |
-      bash -c 'bash -s <<EOF
-      "/bin/bash" -c "cat <<EOF > /opt/bitnami/redis/etc/sentinel.conf
-      port 16379
-      dir /tmp
-      sentinel monitor master-node redis-master 6379 2
-      sentinel down-after-milliseconds master-node 5000
-      sentinel parallel-syncs master-node 1
-      sentinel failover-timeout master-node 5000
-      sentinel auth-pass master-node pass
-      sentinel announce-ip redis-sentinel
-      sentinel announce-port 16379
-      EOF"     
-      "/bin/bash" -c "redis-sentinel /opt/bitnami/redis/etc/sentinel.conf"    
-      EOF'
-    deploy:
-      mode: global
-      restart_policy:
-        condition: any
+  redisnode3:
+    image: jayjohnson/redis-haproxy-clusterable
+    environment:
+      - CLUSTER_NAME=redis-cluster
+      - NODE_TYPE=node3
+      - IP_BIND=0.0.0.0
+      - MASTER_REDIS_HOST=redisnode1
+      - MASTER_REDIS_PORT=6379
+      - REDIS_PORT=6379
+      - SENTINEL_PORT=6378
+      - SENTINEL_INSTANCES_FOR_QUORUM=2
+      - SENTINEL_DOWN_IN_MILLISECONDS=5000
+      - SENTINEL_FAILOVER_TIMEOUT=10000
+      - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
+      - CLUSTERED=0
+    networks:
+      - pretixRedisNetwork
         
   web:
     image: pretix/standalone:stable
-    container_name: pretix_server
-    restart: always
     depends_on:
-        - pgpool
-        - redis-master
-    ports:
-        - "8888:80"
+      - pgpool
+      - redisnode1
     volumes:
-        - ./pretix.cfg:/etc/pretix/pretix.cfg
+      - /nfs/pretix/web/pretix:/etc/pretix:rw
+      - /nfs/pretix/web/data:/data:rw
+      # - "./pretix.cfg:/etc/pretix/pretix.cfg"
+    ports:
+      - 7280:80
+    networks:
+      - pretixOut
+    configs:
+      - source: pretixConf
+        target: /etc/pretix/pretix.cfg
     deploy:
-      mode: replicated
       replicas: 2
 
-volumes:
-  redis:
-    driver: local
-  pg_0_data:
-    driver: local
-  pg_1_data:
-    driver: local
+configs:
+    pretixConf:
+        file: ./pretix.cfg
+
+networks:
+  pretixOut:
+    driver: overlay
+  pretixPgNetwork:
+    driver: overlay
+  pretixRedisNetwork:
+    driver: overlay
