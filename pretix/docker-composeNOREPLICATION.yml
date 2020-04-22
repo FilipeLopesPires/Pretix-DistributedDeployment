@@ -8,6 +8,8 @@ services:
             - POSTGRES_USER=pretix
             - POSTGRES_DB=pretix
             - POSTGRES_PASSWORD=pretix
+        ports:
+            - "5432:5432"
         volumes:
             - pretixData:/var/lib/postgresql/data
         ports:
