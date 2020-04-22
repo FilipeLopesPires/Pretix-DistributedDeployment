@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.3'
 services:
     postgres:
         image: postgres:11-alpine
@@ -11,14 +11,21 @@ services:
         ports:
             - "5432:5432"
         volumes:
-         - pgData:/var/lib/postgresql/data
+            - pretixData:/var/lib/postgresql/data
+        ports:
+            - "7232:5432"
+
     redis:
         image: redis:4-alpine
         container_name: pretix_cache
         restart: always
         command: redis-server /usr/local/etc/redis/redis.conf
         volumes:
-            - redisData:/usr/local/etc/redis/redis.conf
+            - pretixData:/usr/local/etc/redis/redis.conf
+            - pretixData:/data
+        ports:
+         - "7279:6379"
+
     web:
         image: pretix/standalone:stable
         container_name: pretix_server
@@ -26,13 +33,21 @@ services:
         depends_on:
             - postgres
             - redis
-        ports:
-            - "8888:80"
         volumes:
-            - ./pretix.cfg:/etc/pretix/pretix.cfg
+            - pretixData:/etc/pretix
+            - pretixWeb:/data
+        configs:
+            - source: pretixConf
+              target: /etc/pretix/pretix.cfg
+        ports:
+            - "7280:80"
 
 volumes:
-    pgData:
+    pretixData:
         external: false
-    redisData:
+    pretixWeb:
         external: false
+
+configs:
+    pretixConf:
+        file: ./pretix.cfg

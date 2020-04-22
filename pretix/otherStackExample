@@ -1,0 +1,154 @@
+version: '3.3'
+services:
+  frontend:
+    image: 10.2.0.1:5000/fr_frontend:latest
+    command:
+     - python3
+     - manage.py
+     - runserver
+     - 0.0.0.0:8000
+    volumes:
+     - /nfs/frame_recognition/frontend/logs:/frontend/logs
+     - /nfs/frame_recognition/frontend/media:/frontend/media
+    networks:
+     - access_network
+     - db_network
+     - frontend_network
+    logging:
+      driver: json-file
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+  master:
+    image: 10.2.0.1:5000/fr_master:latest
+    ports:
+     - 62053:9000
+    volumes:
+     - /nfs/frame_recognition/master/logs:/master/logs
+     - /nfs/frame_recognition/master/video_files:/master/video_files
+     - /nfs/frame_recognition/frontend/media:/master/processed_video_files
+    networks:
+     - db_network
+     - frontend_master_network
+     - master_network
+    configs:
+     -
+      source: fr_master_config
+      target: /master/configurations/conf.yaml
+    logging:
+      driver: json-file
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+  mysqlserver:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE_FILE: /run/secrets/mysql_database
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    volumes:
+     - /nfs/frame_recognition/db:/var/lib/mysql
+    networks:
+     - db_network
+    secrets:
+     -
+      source: fr_mysql_database
+      target: mysql_database
+     -
+      source: fr_mysql_root_password
+      target: mysql_root_password
+    logging:
+      driver: json-file
+    deploy:
+      restart_policy:
+        condition: on-failure
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:edge-4.9
+    environment:
+      PMA_HOST: mysqlserver
+    ports:
+     - 62051:80
+    networks:
+     - db_network
+    logging:
+      driver: json-file
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+         - node.role == manager
+  slave:
+    image: 10.2.0.1:5000/fr_slave:latest
+    volumes:
+     - /nfs/frame_recognition/slave/logs:/slave/logs
+     - /nfs/frame_recognition/slave/yolo_files:/slave/yolo_files
+    networks:
+     - slave_network
+    logging:
+      driver: json-file
+    deploy:
+      replicas: 8
+      restart_policy:
+        condition: on-failure
+  slavelb:
+    image: nginx:1.17.9
+    networks:
+     - master_network
+     - slave_network
+    configs:
+     -
+      source: fr_slavelb_config
+      target: /etc/nginx/nginx.conf
+    logging:
+      driver: json-file
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+  sshserver:
+    image: 10.2.0.1:5000/ssh:latest
+    ports:
+     - '62052:22'
+    volumes:
+     - /nfs/frame_recognition/db:/root/db
+     - /nfs/frame_recognition/frontend/logs:/root/frontend/logs
+     - /nfs/frame_recognition/frontend/media:/root/frontend/media
+     - /nfs/frame_recognition/master/logs:/root/master/logs
+     - /nfs/frame_recognition/master/video_files:/root/master/video_files
+     - /nfs/frame_recognition/slave/logs:/root/slave/logs
+     - /nfs/frame_recognition/slave/yolo_files:/root/slave/yolo_files
+    networks:
+     - access_network
+    logging:
+      driver: json-file
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+         - node.role == manager
+networks:
+  access_network:
+    driver: overlay
+  db_network:
+    driver: overlay
+  frontend_master_network:
+    driver: overlay
+  frontend_network:
+    driver: overlay
+  master_network:
+    driver: overlay
+  slave_network:
+    driver: overlay
+configs:
+  fr_master_config:
+    external: true
+  fr_slavelb_config:
+    external: true
+secrets:
+  fr_mysql_database:
+    external: true
+  fr_mysql_root_password:
+    external: true
