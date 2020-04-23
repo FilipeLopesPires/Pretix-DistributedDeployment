@@ -9,7 +9,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREAMBLE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \topmargin -1.0cm
-\oddsidemargin 0.0cm
+\oddsidemargin 0.0cm 
 \textwidth 16cm 
 \textheight 23cm
 \footskip 1.0cm
@@ -51,8 +51,17 @@ Computational Infrastructures Management\\
 
 \section*{Introduction} \label{introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This report aims to describe the work developed for the ...
+This report aims to describe the work developed for the intermediate phase of the practical assignment of the discipline of Computational Infrastructures 
+Management \cite{assign} from the Msc. degree in Informatics Engineering of the University of Aveiro at the Department of Electronics, Telecommunications and 
+Informatics.
+It is here included:
+a product description and the respective expectations regarding client capacity, derived from a thorough analysis;
+the adopted clustering strategy, considering matters such as virtualization, storage, network and load distribution mechanisms;
+an explanation of the performance analysis executed based on the department's support platform for representative use cases;
+and the results drawn from such analysis, to be considered during the second phase of development.
 
+The service provided is Pretix, an online shop, box office and ticket outlet already successfully used by other service providers for conferences, festivals, 
+exhibitions, workshops and more.
 All code developed is publicly accessible in our GitHub repository:
 
 \url{https://github.com/FilipePires98/GIC}.
@@ -62,17 +71,76 @@ All code developed is publicly accessible in our GitHub repository:
 
 % what is pretix?
 
-...
+Pretix \cite{pretix} is an all-in-one product, serving as an online shop, box office and ticket outlet, meant for companies that aim to host events of numerous kinds.
+This ticketing software created by Rami.io \cite{rami.io} has a wide variety of features that range from ticket shop customization (domain definition, multiple 
+language support, product structure with multiple categories, packages and possibility for donations, seating plans, website embeddings, etc.) and marketing 
+(voucher system, email, campaign tracking, etc.), to payment definition (invoicing and multiple payment methods) and on-site management (check-in lists, ticket 
+scans, etc.), and even administrative control (with statistics and event-spanning reports, team permissions and data export and API).
 
-\subsection{Our Product} \label{pretix.product} %%%%%%%%%%%%%%%%%%%%%%%%%%
+As a complete solution, Pretix has already been successfully used for conferences, festivals, concerts, shows, exhibitions, workshops, barcamps, and more 
+according to the creators.
+The software's source code is completely open source \cite{pretixgit}, and the authors make available extensive documentation \cite{pretixdoc}, an installation 
+guide and a support blog.
+
+\subsection{Our Product} \label{pretix.product} %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % what is our purpose? what are we offering?
 
-...
+What we offer, as a developers team, is the Pretix' infrastructure deployment and management as a service that could potentially be provided to businesses 
+interested in hosting events by taking advantage of Pretix' many advantages, without having resources or knowledge of how to deploy it themselves.
+Our contract is simply to ensure the correct, reliable, secure and constant functioning of Pretix, capable of supporting usage scenarios of the same magnitude 
+as of the one described next.
 
-\subsection{Use Case Scenario} \label{pretix.scenario} %%%%%%%%%%%%%%%%%%%
+\subsection{Use Case Scenario} \label{pretix.scenario} %%%%%%%%%%%%%%%%%%%%%
 
-...
+% what do we intend to be able to support?
+% how many users and/or requests per second is the system supposed to be able to handle?
+
+In order to ensure the fulfillment of our contract, a representative scenario of usage was defined to guide us throughout development.
+A simulated organization intends to host a WebSummit-like event by the end of this year.
+It has analysed the feature list of Pretix and wishes to adopt it in the future.
+However, as it is its first time using the software, the company decided to use it simply as a ticket purchase platform and reduced the payment methods to 
+on-site manual payment only. % NUMBERS ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
+The organization expects to sell 10 000 tickets in a week and warned us that in previous events they witnessed a peak close to the end of the selling period.
+
+In practical terms this means that we only need to concern ourselves with the online ticket purchasing features and do not even need to consider the actual 
+payment process, although it was our intent from the beginning to support most of Pretix's features even if most would not be used.
+It also means that we had to build the system considering our hardware limitations and the activity peak expectation.
+
+\subsection{Support Requirements} \label{pretix.requirements} %%%%%%%%%%%%%%
+
+% what components need to exist for the product to be fully supported?
+% what are the minimal hardware requirements for its deployment?
+
+As stated in their documentation, to use Pretix it is required:
+\vspace{-10pt}
+\begin{itemize}[noitemsep]
+  \item Pretix and the python packages it depends on
+  \item An WSGI application server
+  \item A periodic task runner
+  \item A database
+  \item A reverse proxy
+  \item A server for caching, session storage and task queuing
+\end{itemize}
+\vspace{-10pt}
+As we intended to deploy the product in containers, Docker became an additional requirement.
+
+% NUMBERS ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 
+Regarding the hardware remotely available at our department, it was allocated for us an infrastructure of a total of 58 nodes and 115 cores, with 5.6TB of 
+storage and 235.8GB of RAM available.
+However, this is destined for several developer teams, meaning that we must only use a small portion of such resources, by our estimates of less than 10\% of 
+the total capacity.
+
+Also according to Pretix' documentation, the software has some scalability limitations.
+In some cases their software needs to "fall back to event-global locking for some actions which are likely to run with high concurrency and cause harm".
+For every event, only one of such locking actions can be run at the same time.
+With this in mind, they estimate a maximum capacity of approximately 500 orders per minute per event, "even if you add more hardware".
+However, they also mention that if the event to be hosted has an unlimited number of tickets (which is our case), fewer locking is applied and thus it is 
+possible to reach approximately 1500 orders per minute per event.
+
+Considering all of these aspects, we made an estimation of how many ticket purchase requests we would be able to support per minute.
+At this preliminary stage, we believed it could be achieved a capacity of 800 ticket purchases per minute without a relevant amount of failed attempts.
+In chapter \ref{performance} we explore our own system in an attempt to determine whether our estimations were correct and feasible or not.
 
 %\texttt{java -cp <userdir>/build/classes fi.FarmInfrastructure}
 
@@ -101,19 +169,19 @@ All code developed is publicly accessible in our GitHub repository:
 \newpage
 \section{Clustering Strategy} \label{strategy} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Architecture} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%
+\subsection{Architecture} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%%%
 
 % what are the dependencies? what components does the cluster have?
 
 ...
 
-\subsection{Distribution} \label{strategy.distribution} %%%%%%%%%%%%%%%%%%
+\subsection{Distribution} \label{strategy.distribution} %%%%%%%%%%%%%%%%%%%%
 
 % how exactly is the system being distributed?
 
 ...
 
-\subsection{Deployment} \label{strategy.deployment} %%%%%%%%%%%%%%%%%%%%%%
+\subsection{Deployment} \label{strategy.deployment} %%%%%%%%%%%%%%%%%%%%%%%%
 
 % how exactly is the system being deployed?
 
@@ -124,15 +192,66 @@ All code developed is publicly accessible in our GitHub repository:
 
 % what was done to evaluate its current performance?
 
-...
+In order to determine the true capacity of our deployed solutions, a set of measures were performed both locally and on the remote, shared and more powerful 
+infrastructure.
+Although replication and redundancy were already concerns of ours, we were not yet focused on determining availability statistics.
+Rather, our aim was to test our services in terms of load capacity.
 
-\subsection{Benchmarking} \label{performance.benchmarking} %%%%%%%%%%%%%%%
+We wished to determine how many users were supported simultaneously accessing Pretix and attempting to purchase tickets to our fictitious event.
+To do this, we performed benchmarking tests and tracked the number of failures both in the act of requesting a purchase and in the act of storing purchases in 
+our databases.
+In this chapter we describe the efforts made for benchmarking and the bottlenecks discovered from our performance evaluation.
+
+\subsection{Benchmarking} \label{performance.benchmarking} %%%%%%%%%%%%%%%%%
+
+% what framework was used for load testing and how was it used?
+
+After doing research on available tools and frameworks, we reached the conclusion that the most adequate would be Locust \cite{locust}.
+Locust is an open source, intuitive, distributed, user load testing framework intended to "figure out how many concurrent users a system can handle" by 
+programmatically simulating thousands of users called locusts.
+During tests, systems are "attacked" by a swarm of locusts whose behavior is defined by the developer in Python and the swarming process is monitored from a 
+web UI in real-time. 
+
+When defining the behavior of our locusts, some considerations had to be dealt with.
+The job of a locust wasn't simply to send an HTTP request to purchase a ticket; real users need to go through a purchasing process on Pretix' web platform, and 
+in that process the user's browser requests far more data from the server than the mere purchase action.
+So this process needed to be somehow simulated as well.
+Several possibilities were considered to achieve this.
+
+Selenium \cite{selenium}, a suite of tools for automating web browsers, is a widely used solution for testing purposes; however, we intended to launch thousands 
+of virtual users and so, even with options such as launching browsers in headless mode (without rendering page elements), this created a bottleneck of processing 
+elements that were not relevant to us and did not represent the true capacity of the system, thus rendering the whole benchmark invalid.
+Other alternatives like wrappers to drive browsers in Python were tried but proved to be too limited for our purposes.
+
+The solution was to manually go through the purchase process once on the Pretix website and collect all network requests that were being made, including CSS 
+resources, image files, Javascript code and requests sent to Pretix' REST API.
+Amongst these requests was the actual purchase action in a message of type POST.
+Then, we replicated all requests on the locust behavior and, by reading Pretix' API documentation, were able to manipulate the POST request to seem to come 
+from different users.
+We also included optional data on such requests, like invoices, to increase the load the server needed to process and so establishing a worst-case-scenario usage 
+that would give us more comfort regarding the faithfulness of the results.
+
+\subsection{Execution} \label{performance.execution} %%%%%%%%%%%%%%%%%%%%%%%
 
 % how was the benchmarking done?
 
-...
+Having established the behavior of the fictitious users, we proceeded to actually executing our benchmarking.
+This was divided in 2 groups of tests of 4 phases each.
+The first group was entirely performed locally in one of our personal computers, the second was performed remotely using our Docker Swarm.
+This was done in order to clearly comprehend the differences of performance between the 2 deployment methods and detect which bottlenecks were common to both, 
+which were surpassed with greater hardware capacity and which appeared only in the second group (if any).
 
-\subsection{Bottlenecks} \label{performance.bottlenecks} %%%%%%%%%%%%%%%%%
+The 4 phases consisted in load testing the solution with 4 different activity peaks: one with half the expected load, one with the expected load, one with 
+twice as many expected users and one with 10 times as many users.
+These were defined a priori and the expected load was set according to the analysis described in section \ref{pretix.requirements}. \\
+
+The results of the first group of tests are presented next.
+... \\
+
+With the system fully deployed using Docker Swarm, the second group of tests was executing, resulting in the following values.
+... 
+
+\subsection{Bottlenecks} \label{performance.bottlenecks} %%%%%%%%%%%%%%%%%%%
 
 % what performance bottlenecks were found?
 
@@ -141,29 +260,39 @@ All code developed is publicly accessible in our GitHub repository:
 \newpage
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Planning Phase 2} \label{remarks.planning} %%%%%%%%%%%%%%%%%%%
+\subsection{Planning Phase 2} \label{remarks.planning} %%%%%%%%%%%%%%%%%%%%%
 
 % what is to be done until the final delivery?
+% docker secrets, fault tolerance, 
+
+With the intermediate development phase complete, our concerns shift towards making the solution more fault tolerant, scalable, reliable and in general more robust.
 
 ...
 
-\subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%
+\subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%%%
 
 % what documentation was produced?
 
-...
+A great portion of the code we deal with isn't of our authorship, so the documentation it contains is the documentation we get.
+Nevertheless, the code we developed has specific purposes and, although usually very much self explanatory due to its nature, should be easy to interpret by any person.
+Our goal is to ensure that what we deliver can be easily reused or even continued by other developers.
 
-\subsection{Assignment Contributions} \label{remarks.contributions} %%%%%%
+With this in mind, we made significant efforts on ensuring that all code developed by us followed a common structure with the same coding style.
+Also, we made sure all source files have a description of their purpose and relevant information on the first lines, and contain comments on key points of the 
+code explaining snippets considered of greater complexity/importance.
+
+\subsection{Assignment Contributions} \label{remarks.contributions} %%%%%%%%
 
 % who did what?
 
 Regarding the work distribution amongst developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according 
 to a predefined plan. 
 The cluster strategy and respective details were decided in conjunction, as well as the key objectives and tasks to be achieved before the final delivery deadline.
-... were also implemented collectively.
 
-Nevertheless, some relatively independent task distribution was defined: ...
-Bug and error solving was made along the development phase by both developers any time it was required.
+Pretix' features were explored by both developers in order to better comprehend the web platform and the REST API.
+Then, João focused on the deployment of our solution on the department's infrastructure while Filipe focused on creating and executing the load tests.
+The analysis of the results were carefully conducted in conjunction as well, in order to maintain a common knowledge for better workflows.
+It is needless to say that bug and error solving was made along the development phase by both developers any time it was required.
 
 Once performance benchmarking and bottleneck identification were completed, this report and the code documentation became our primary concern, with both 
 contributing equally.
@@ -177,10 +306,48 @@ contributing equally.
   \bibliographystyle{Science}
 
   \bibitem{assign}
-    João Paulo Barraca,
-    \textit{GIC: Practical Assignment no.1},
+    J. P. Barraca,
+    \textit{GIC - Report no.1: Simple Product Operation},
     University of Aveiro,
     2019/20.
+
+  \bibitem{pretix}
+    \textit{About Pretix},
+    \url{https://pretix.eu/about/en/}.
+    Pretix.eu,
+    retrieved in April 2020.
+
+  \bibitem{rami.io}
+    \textit{Welcome to Rami.io},
+    \url{https://rami.io/}.
+    Rami.io,
+    retrieved in April 2020.
+
+  \bibitem{pretixgit}
+    \textit{Pretix Code Repository},
+    \url{https://github.com/pretix/pretix}.
+    GuitHub, Inc.,
+    retrieved in April 2020.
+
+  \bibitem{pretixdoc}
+    \textit{Welcome to pretix' documentation!},
+    \url{https://docs.pretix.eu/en/latest/}.
+    Pretix.eu,
+    retrieved in April 2020.
+
+
+
+  \bibitem{locust}
+    \textit{Locust, an open source load testing tool},
+    \url{https://locust.io/}.
+    Locust.io,
+    retrieved in April 2020.
+
+  \bibitem{selenium}
+    \textit{About Selenium},
+    \url{https://www.selenium.dev/about/}.
+    Software Freedom Conservancy,
+    retrieved in April 2020.
 
 \end{thebibliography}
 

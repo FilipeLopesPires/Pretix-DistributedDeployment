@@ -146,8 +146,9 @@ services:
       # - /nfs/pretix/web/data:/data:rw
       - ./pretix.cfg:/etc/pretix/pretix.cfg
     ports:
-      - 7280:80
+      - 7201:80
     networks:
+      - pretixOut
       - pretixPgNetwork
       - pretixRedisNetwork
     configs:
@@ -156,12 +157,52 @@ services:
     deploy:
       replicas: 2
 
+  # web2:
+  #   image: pretix/standalone:stable
+  #   depends_on:
+  #     - pgpool
+  #     - redisproxy
+  #   volumes:
+  #     # - /nfs/pretix/web/pretix:/etc/pretix:rw
+  #     # - /nfs/pretix/web/data:/data:rw
+  #     - ./pretix.cfg:/etc/pretix/pretix.cfg
+  #   ports:
+  #     - 7202:80
+  #   networks:
+  #     - pretixOut
+  #     - pretixPgNetwork
+  #     - pretixRedisNetwork
+  #   configs:
+  #     - source: pretixConf
+  #       target: /etc/pretix/pretix.cfg
+  #   deploy:
+  #     replicas: 2
+
+  nginx: 
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    configs:
+      - source: pretixNginxConf
+        target: /etc/nginx/nginx.conf
+    ports:
+      - 7280:80
+    #  - 443:443
+    networks:
+      - pretixOut
+    deploy:
+      replicas: 2
+
 configs:
-    pretixConf:
-        file: ./pretix.cfg
+  pretixConf:
+    file: ./pretix.cfg
+  pretixNginxConf:
+    file: ./nginx.conf
 
 networks:
+  pretixOut:
+    #driver: overlay
   pretixPgNetwork:
-    # driver: overlay
+    #driver: overlay
   pretixRedisNetwork:
-    # driver: overlay
+    #driver: overlay
