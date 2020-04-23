@@ -2,8 +2,6 @@ version: '3.3'
 services:
   pg-0:
     image: bitnami/postgresql-repmgr:11
-    expose:
-      - 5432
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customuser
@@ -14,15 +12,13 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
-    volumes:
-      - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
+    # volumes:
+    #   - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
 
   pg-1:
     image: bitnami/postgresql-repmgr:11
-    expose:
-      - 5432
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customuser
@@ -33,15 +29,13 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
-    volumes:
-      - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
+    # volumes:
+    #   - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
 
   pg-2:
     image: bitnami/postgresql-repmgr:11
-    expose:
-      - 5432
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customuser
@@ -52,8 +46,8 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-2
       - REPMGR_NODE_NETWORK_NAME=pg-2
-    volumes:
-      - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
+    # volumes:
+    #   - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
 
@@ -71,22 +65,25 @@ services:
       - PGPOOL_ADMIN_USERNAME=admin
       - PGPOOL_ADMIN_PASSWORD=adminpassword
       - PGPOOL_ENABLE_LOAD_BALANCING=yes
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - pretixPgNetwork
-      - pretixOut
 
-  # haproxynode1:
-  #   image: jayjohnson/haproxy-redis
-  #   environment:
-  #     - NODE_TYPE=master
-  #     - NODE_SUPERVISOR_NAME=haproxy
-  #     - NODE_EXPOSE_PORT=6379
-  #     - CLUSTER_NAME=redis-cluster
-  #     - NUM_INSTANCES=3
-  #     - BASE_HOSTNAME=redisnode1
-  #     - BASE_REDIS_PORT=9001
-  #     - BASE_SENTINEL_PORT=19001
-  #     - CLUSTERED=0
+  redisproxy:
+    # image: 10.2.0.1:5000/pretixhaproxy
+    build: ./haproxy
+    ports:
+      - 7279:6379
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=password
+      - REDIS_HOSTS=redisnode1,redisnode2,redisnode3
+    networks:
+      - pretixRedisNetwork
 
   redisnode1:
     image: jayjohnson/redis-haproxy-clusterable
@@ -103,11 +100,8 @@ services:
       - SENTINEL_FAILOVER_TIMEOUT=10000
       - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
       - CLUSTERED=0
-    ports:
-      - 7279:6379
     networks:
       - pretixRedisNetwork
-      - pretixOut
 
   redisnode2:
     image: jayjohnson/redis-haproxy-clusterable
@@ -147,17 +141,15 @@ services:
         
   web:
     image: pretix/standalone:stable
-    depends_on:
-      - pgpool
-      - redisnode1
     volumes:
-      - /nfs/pretix/web/pretix:/etc/pretix:rw
-      - /nfs/pretix/web/data:/data:rw
-      # - "./pretix.cfg:/etc/pretix/pretix.cfg"
+      # - /nfs/pretix/web/pretix:/etc/pretix:rw
+      # - /nfs/pretix/web/data:/data:rw
+      - ./pretix.cfg:/etc/pretix/pretix.cfg
     ports:
       - 7280:80
     networks:
-      - pretixOut
+      - pretixPgNetwork
+      - pretixRedisNetwork
     configs:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
@@ -169,9 +161,7 @@ configs:
         file: ./pretix.cfg
 
 networks:
-  pretixOut:
-    driver: overlay
   pretixPgNetwork:
-    driver: overlay
+    # driver: overlay
   pretixRedisNetwork:
-    driver: overlay
+    # driver: overlay
