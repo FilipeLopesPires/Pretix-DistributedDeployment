@@ -12,8 +12,8 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
-    volumes:
-      - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
+    # volumes:
+    #   - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
 
@@ -29,8 +29,8 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
-    volumes:
-      - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
+    # volumes:
+    #   - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
 
@@ -46,8 +46,8 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-2
       - REPMGR_NODE_NETWORK_NAME=pg-2
-    volumes:
-      - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
+    # volumes:
+    #   - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
 
@@ -74,8 +74,8 @@ services:
       - pretixPgNetwork
 
   redisproxy:
-    image: 10.2.0.1:5000/pretixhaproxy
-    # build: ./haproxy
+    # image: 10.2.0.1:5000/pretixhaproxy
+    build: ./haproxy
     ports:
       - 7279:6379
     environment:
@@ -142,11 +142,11 @@ services:
   web:
     image: pretix/standalone:stable
     volumes:
-      - /nfs/pretix/web/pretix:/etc/pretix:rw
-      - /nfs/pretix/web/data:/data:rw
-      - /nfs/pretix/wait-for-it.sh:/wait-for-it.sh
-      # - ./wait-for-it.sh:/wait-for-it.sh
-      # - ./pretix.cfg:/etc/pretix/pretix.cfg
+      # - /nfs/pretix/web/pretix:/etc/pretix:rw
+      # - /nfs/pretix/web/data:/data:rw
+      # - /nfs/pretix/wait-for-it.sh:/wait-for-it.sh
+      - ./wait-for-it.sh:/wait-for-it.sh
+      - ./pretix.cfg:/etc/pretix/pretix.cfg
     ports:
       - 7201:80
     networks:
@@ -156,11 +156,11 @@ services:
     configs:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
-    # healthcheck:
-    #   test: ["CMD", "/wait-for-it.sh -h pgpool -p 5432 && /wait-for-it.sh -h redisproxy -p 6379"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 5
+    healthcheck:
+      test: ["CMD", "/wait-for-it.sh -h pgpool -p 5432 && /wait-for-it.sh -h redisproxy -p 6379"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       replicas: 2
 
@@ -187,8 +187,6 @@ services:
 
   nginx: 
     image: nginx:latest
-    depends_on:
-      - web
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     configs:
@@ -210,8 +208,8 @@ configs:
 
 networks:
   pretixOut:
-    driver: overlay
+    # driver: overlay
   pretixPgNetwork:
-    driver: overlay
+    # driver: overlay
   pretixRedisNetwork:
-    driver: overlay
+    # driver: overlay
