@@ -1,3 +1,9 @@
+#
+# Title: Deployment Configuration for Docker Composed Swarm
+#
+# Authors: Filipe Pires (85122) and João Alegria (85048)
+#
+
 version: '3.3'
 services:
   pg-0:

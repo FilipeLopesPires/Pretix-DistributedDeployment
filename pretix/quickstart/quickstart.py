@@ -16,7 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException
 
-# Change these variables if you wish to personalize the script results
+# Change these variables if you wish to personalize the script
 admin_email = "admin@localhost"
 admin_pwd = "admin"
 host_address = "http://localhost:80"

@@ -8,7 +8,7 @@ loadTesting - contains test scripts for evaluating infrastructure performance un
 
 stackTests - 
 
-haproxy - (https://github.com/jay-johnson/docker-redis-haproxy-cluster)
+haproxy - (https://github.com/arhea/docker-redis)
 
 ## Authors:
 
