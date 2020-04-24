@@ -169,7 +169,7 @@ In chapter \ref{performance} we explore our own system in an attempt to determin
 \newpage
 \section{Clustering Strategy} \label{strategy} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Architecture} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%%%
+\subsection{Architecture} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%%% 
 
 % what are the dependencies? what components does the cluster have?
 
@@ -259,6 +259,22 @@ With the system fully deployed using Docker Swarm, the second group of tests was
 
 \newpage
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Pretix Quickstart} \label{remarks.quickstart} %%%%%%%%%%%%%%%%%%
+
+% quickstart script
+
+During development, a need for a faster basic setup of Pretix emerged for debugging purposes.
+As many of our tests assumed the existence of organizers and events already inserted on the databases, each time these had to be cleared the objects had to be 
+manually created before proceeding with some implementation process.
+
+In order to respond to this need, we developed a Python script capable of completely dispose of the manual labour.
+This script, which we called \texttt{quickstart.py} and placed under the scripts folder, uses Selenium \cite{selenium} to create an organization inside Pretix, 
+generate a secret API key for sending REST requests (storing it in a text file), create a default event and prepare it for load testing with Locust.
+It also contains configurable variables to personalize its output.
+
+Such quickstart tool was not only found useful for the obvious advantage in development speed it brought to us, but was also considered a good help tool for any 
+person that wishes to quickly experiment our infrastructure without having to know much about Pretix itself.
 
 \subsection{Planning Phase 2} \label{remarks.planning} %%%%%%%%%%%%%%%%%%%%%
 
