@@ -99,7 +99,6 @@ services:
       - SENTINEL_DOWN_IN_MILLISECONDS=5000
       - SENTINEL_FAILOVER_TIMEOUT=10000
       - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
-      - CLUSTERED=0
     networks:
       - pretixRedisNetwork
 
@@ -117,7 +116,6 @@ services:
       - SENTINEL_DOWN_IN_MILLISECONDS=5000
       - SENTINEL_FAILOVER_TIMEOUT=10000
       - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
-      - CLUSTERED=0
     networks:
       - pretixRedisNetwork
 
@@ -135,16 +133,14 @@ services:
       - SENTINEL_DOWN_IN_MILLISECONDS=5000
       - SENTINEL_FAILOVER_TIMEOUT=10000
       - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
-      - CLUSTERED=0
     networks:
       - pretixRedisNetwork
         
   web:
     image: pretix/standalone:stable
     volumes:
-      # - /nfs/pretix/web/pretix:/etc/pretix:rw
-      # - /nfs/pretix/web/data:/data:rw
-      # - /nfs/pretix/wait-for-it.sh:/wait-for-it.sh
+      - pretixData1:/etc/pretix:rw
+      - pretixData2:/data:rw
       - ./wait-for-it.sh:/wait-for-it.sh
       - ./pretix.cfg:/etc/pretix/pretix.cfg
     ports:
@@ -156,11 +152,6 @@ services:
     configs:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
-    healthcheck:
-      test: ["CMD", "/wait-for-it.sh -h pgpool -p 5432 && /wait-for-it.sh -h redisproxy -p 6379"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     deploy:
       replicas: 2
 
@@ -213,3 +204,9 @@ networks:
     # driver: overlay
   pretixRedisNetwork:
     # driver: overlay
+
+volumes:
+  pretixData1:
+    driver: local
+  pretixData2:
+    driver: local
