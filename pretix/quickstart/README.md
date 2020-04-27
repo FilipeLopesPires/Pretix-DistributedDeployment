@@ -1,11 +1,5 @@
 # Selenium Installation Guide (for the Usage of Selenium with Python)
 
-## Authors:
-
-Filipe Pires (85122)
-
-João Alegria (85048)
-
 ## Instructions
 
 1. Install the required modules:
@@ -28,3 +22,9 @@ $ firefoxdriver
 ```
 
 4. You are good to go!
+
+## Authors:
+
+Filipe Pires (85122)
+
+João Alegria (85048)

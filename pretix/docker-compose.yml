@@ -1,3 +1,9 @@
+#
+# Title: Deployment Configuration for Docker Composed Swarm
+#
+# Authors: Filipe Pires (85122) and João Alegria (85048)
+#
+
 version: '3.3'
 services:
   pg-0:
@@ -217,8 +223,8 @@ services:
 
   nginx: 
     image: nginx:latest
-    # volumes:
-    #   - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
     configs:
       - source: pretixNginxConf
         target: /etc/nginx/nginx.conf
