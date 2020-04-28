@@ -1,0 +1,207 @@
+#
+# Title: Deployment Configuration for Local Docker Compose
+#
+# Authors: Filipe Pires (85122) and João Alegria (85048)
+#
+
+version: '3.3'
+services:
+  pg-0:
+    image: bitnami/postgresql-repmgr:11
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=pretix
+      - POSTGRESQL_PASSWORD=pretix
+      - POSTGRESQL_DATABASE=pretix
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-0
+      - REPMGR_NODE_NETWORK_NAME=pg-0
+    volumes:
+      - postgresmaster:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+
+  pg-1:
+    image: bitnami/postgresql-repmgr:11
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=pretix
+      - POSTGRESQL_PASSWORD=pretix
+      - POSTGRESQL_DATABASE=pretix
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=pg-1
+    volumes:
+      - postgresslave1:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+
+  pg-2:
+    image: bitnami/postgresql-repmgr:11
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=pretix
+      - POSTGRESQL_PASSWORD=pretix
+      - POSTGRESQL_DATABASE=pretix
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=pg-2
+    volumes:
+      - postgresslave2:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+
+  pgpool:
+    image: bitnami/pgpool:4
+    ports:
+      - 7232:5432
+    environment:
+      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432,2:pg-2:5432
+      - PGPOOL_SR_CHECK_USER=pretix
+      - PGPOOL_SR_CHECK_PASSWORD=pretix
+      - PGPOOL_ENABLE_LDAP=no
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=adminpassword
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpassword
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pretixPgNetwork
+
+  redisproxy:
+    build: ../components/haproxy
+    ports:
+      - 7279:6379
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=password
+      - REDIS_HOSTS=redismaster, redisslave, redisslave2
+    networks:
+      - pretixRedisNetwork
+
+  redismaster:
+      image: redis:4.0.10-alpine
+      volumes:
+        - redis1:/data
+      networks:
+        - pretixRedisNetwork
+
+  redisslave:
+    build: ../components/redisSlave
+    environment:
+      - REDIS_MASTER=redismaster
+    volumes:
+      - redis2:/data
+    networks:
+        - pretixRedisNetwork
+
+  redisslave2:
+    build: ../components/redisSlave
+    environment:
+      - REDIS_MASTER=redismaster
+    volumes:
+      - redis3:/data
+    networks:
+        - pretixRedisNetwork
+
+  redissentinel:
+    build: ../components/redisSentinel
+    environment:
+      - MASTER_NAME=mymaster
+      - QUORUM=1
+      - MASTER=redismaster
+    volumes:
+      - redis4:/data
+    networks:
+        - pretixRedisNetwork
+        
+  web:
+    build: ../components/myPretix
+    environment:
+      - POSTGRESIP=pgpool
+      - REDISIP=redisproxy
+    volumes:
+      - pretixData1:/etc/pretix:rw
+      - pretixData2:/data:rw
+    secrets:
+      - source: pretixConf
+        target: /etc/pretix/pretix.cfg
+    ports:
+      - 7201:80
+    networks:
+      - pretixOut
+      - pretixPgNetwork
+      - pretixRedisNetwork
+
+  web2:
+    build: ../components/myPretix
+    environment:
+      - POSTGRESIP=pgpool
+      - REDISIP=redisproxy
+    volumes:
+      - pretixData1:/etc/pretix:rw
+      - pretixData2:/data:rw
+    secrets:
+      - source: pretixConf
+        target: /etc/pretix/pretix.cfg
+    ports:
+      - 7202:80
+    networks:
+      - pretixOut
+      - pretixPgNetwork
+      - pretixRedisNetwork
+
+  nginx: 
+    image: nginx:latest
+    secrets:
+      - source: pretixNginxConf
+        target: /etc/nginx/nginx.conf
+    ports:
+      - 7200:80
+    networks:
+      - pretixOut
+
+secrets:
+  pretixConf:
+    file: ./pretix.cfg
+  pretixNginxConf:
+    file: ./nginx.conf
+
+networks:
+  pretixOut:
+    # driver: overlay
+  pretixPgNetwork:
+    # driver: overlay
+  pretixRedisNetwork:
+    # driver: overlay
+
+volumes:
+  pretixData1:
+    driver: local
+  pretixData2:
+    driver: local
+  redis1:
+    driver: local
+  redis2:
+    driver: local
+  redis3:
+    driver: local
+  redis4:
+    driver: local
+  postgresmaster:
+    driver: local
+  postgresslave1:
+    driver: local
+  postgresslave2:
+    driver: local
