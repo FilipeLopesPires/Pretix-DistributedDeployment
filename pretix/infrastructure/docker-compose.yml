@@ -15,13 +15,15 @@ services:
       - POSTGRESQL_DATABASE=customdatabase
       - REPMGR_PASSWORD=repmgrpassword
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_PARTNER_NODES=pg-0,pg-1
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
     volumes:
       - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
+    logging:
+      driver: json-file
     deploy:
       restart_policy:
         condition: on-failure
@@ -35,36 +37,39 @@ services:
       - POSTGRESQL_DATABASE=customdatabase
       - REPMGR_PASSWORD=repmgrpassword
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_PARTNER_NODES=pg-0,pg-1
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
     volumes:
       - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
+    logging:
+      driver: json-file
     deploy:
+      replicas: 2
       restart_policy:
         condition: on-failure
 
-  pg-2:
-    image: bitnami/postgresql-repmgr:11
-    environment:
-      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-      - POSTGRESQL_USERNAME=customuser
-      - POSTGRESQL_PASSWORD=custompassword
-      - POSTGRESQL_DATABASE=customdatabase
-      - REPMGR_PASSWORD=repmgrpassword
-      - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
-      - REPMGR_NODE_NAME=pg-2
-      - REPMGR_NODE_NETWORK_NAME=pg-2
-    volumes:
-      - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
-    networks:
-      - pretixPgNetwork
-    deploy:
-      restart_policy:
-        condition: on-failure
+  # pg-2:
+  #   image: bitnami/postgresql-repmgr:11
+  #   environment:
+  #     - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+  #     - POSTGRESQL_USERNAME=customuser
+  #     - POSTGRESQL_PASSWORD=custompassword
+  #     - POSTGRESQL_DATABASE=customdatabase
+  #     - REPMGR_PASSWORD=repmgrpassword
+  #     - REPMGR_PRIMARY_HOST=pg-0
+  #     - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+  #     - REPMGR_NODE_NAME=pg-2
+  #     - REPMGR_NODE_NETWORK_NAME=pg-2
+  #   volumes:
+  #     - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
+  #   networks:
+  #     - pretixPgNetwork
+  #   deploy:
+  #     restart_policy:
+  #       condition: on-failure
 
   pgpool:
     image: bitnami/pgpool:4
@@ -87,6 +92,8 @@ services:
       retries: 5
     networks:
       - pretixPgNetwork
+    logging:
+      driver: json-file
     deploy:
       replicas: 2
       restart_policy:
@@ -100,78 +107,51 @@ services:
     environment:
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=password
-      - REDIS_HOSTS=redisnode1,redisnode2,redisnode3
+      - REDIS_HOSTS=redismaster, redisslave
     networks:
       - pretixRedisNetwork
+    logging:
+      driver: json-file
     deploy:
       replicas: 2
       restart_policy:
         condition: on-failure
 
-  redisnode1:
-    image: jayjohnson/redis-haproxy-clusterable
-    environment:
-      - NODE_TYPE=master
-      - CLUSTER_NAME=redis-cluster
-      - IP_BIND=0.0.0.0
-      - MASTER_REDIS_HOST=redisnode1
-      - MASTER_REDIS_PORT=6379
-      - REDIS_PORT=6379
-      - SENTINEL_PORT=6378
-      - SENTINEL_INSTANCES_FOR_QUORUM=2
-      - SENTINEL_DOWN_IN_MILLISECONDS=5000
-      - SENTINEL_FAILOVER_TIMEOUT=10000
-      - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
-      - CLUSTERED=0
-      - USE_THIS_REDIS_CONFIG=/container/node/single_replicated_redis.conf
-    networks:
-      - pretixRedisNetwork
-    deploy:
-      restart_policy:
-        condition: on-failure
+  redismaster:
+      image: redis:4.0.10-alpine
+      volumes:
+        - /nfs/pretix/redis/master:/data:rw
+      logging:
+        driver: json-file
+      networks:
+        - pretixRedisNetwork
 
-  redisnode2:
-    image: jayjohnson/redis-haproxy-clusterable
+  redisslave:
+    image: 10.2.0.1:5000/pretixredisslave
     environment:
-      - CLUSTER_NAME=redis-cluster
-      - NODE_TYPE=node1
-      - IP_BIND=0.0.0.0
-      - MASTER_REDIS_HOST=redisnode1
-      - MASTER_REDIS_PORT=6379
-      - REDIS_PORT=6379
-      - SENTINEL_PORT=6378
-      - SENTINEL_INSTANCES_FOR_QUORUM=2
-      - SENTINEL_DOWN_IN_MILLISECONDS=5000
-      - SENTINEL_FAILOVER_TIMEOUT=10000
-      - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
-      - CLUSTERED=0
-      - USE_THIS_REDIS_CONFIG=/container/node/single_replicated_redis.conf
+      - REDIS_MASTER=redismaster
     volumes:
-      - /nfs/pretix/wait-for-it.sh:/wait-for-it.sh
-    # healthcheck:
-    #   test: ["CMD", "/wait-for-it.sh","-h","redisnode1","-p","6379"]
+      - /nfs/pretix/redis/slave:/data:rw
     networks:
       - pretixRedisNetwork
+    logging:
+      driver: json-file
     deploy:
+      replicas: 2
       restart_policy:
         condition: on-failure
 
-  redisnode3:
-    image: jayjohnson/redis-haproxy-clusterable
+  redissentinel:
+    image: 10.2.0.1:5000/pretixredissentinel
+    # build: ./redisSentinel
     environment:
-      - CLUSTER_NAME=redis-cluster
-      - NODE_TYPE=node2
-      - IP_BIND=0.0.0.0
-      - MASTER_REDIS_HOST=redisnode1
-      - MASTER_REDIS_PORT=6379
-      - REDIS_PORT=6379
-      - SENTINEL_PORT=6378
-      - SENTINEL_INSTANCES_FOR_QUORUM=2
-      - SENTINEL_DOWN_IN_MILLISECONDS=5000
-      - SENTINEL_FAILOVER_TIMEOUT=10000
-      - NODE_REPLICAS=redisnode1:6379 redisnode2:6379 redisnode3:6379
-      - CLUSTERED=0
-      - USE_THIS_REDIS_CONFIG=/container/node/single_replicated_redis.conf
+      - MASTER_NAME=mymaster
+      - QUORUM=1
+      - MASTER=redismaster
+    volumes:
+      - /nfs/pretix/redis/sentinel:/data:rw
+    logging:
+      driver: json-file
     networks:
       - pretixRedisNetwork
     deploy:
@@ -184,48 +164,27 @@ services:
       - /nfs/pretix/web/pretix:/etc/pretix:rw
       - /nfs/pretix/web/data:/data:rw
       - /nfs/pretix/wait-for-it.sh:/wait-for-it.sh
-      # - ./wait-for-it.sh:/wait-for-it.sh
-      # - ./pretix.cfg:/etc/pretix/pretix.cfg
     ports:
       - 7201:80
     networks:
       - pretixOut
       - pretixPgNetwork
       - pretixRedisNetwork
-    configs:
+    secrets:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
+    logging:
+      driver: json-file
     deploy:
       replicas: 2
       restart_policy:
         condition: on-failure
 
-  # web2:
-  #   image: pretix/standalone:stable
-  #   depends_on:
-  #     - pgpool
-  #     - redisproxy
-  #   volumes:
-  #     # - /nfs/pretix/web/pretix:/etc/pretix:rw
-  #     # - /nfs/pretix/web/data:/data:rw
-  #     - ./pretix.cfg:/etc/pretix/pretix.cfg
-  #   ports:
-  #     - 7202:80
-  #   networks:
-  #     - pretixOut
-  #     - pretixPgNetwork
-  #     - pretixRedisNetwork
-  #   configs:
-  #     - source: pretixConf
-  #       target: /etc/pretix/pretix.cfg
-  #   deploy:
-  #     replicas: 2
-
   nginx: 
     image: nginx:latest
     depends_on:
       - web
-    configs:
+    secrets:
       - source: pretixNginxConf
         target: /etc/nginx/nginx.conf
     ports:
@@ -233,12 +192,14 @@ services:
     #  - 443:443
     networks:
       - pretixOut
+    logging:
+      driver: json-file
     deploy:
       replicas: 2
       restart_policy:
         condition: on-failure
 
-configs:
+secrets:
   pretixConf:
     file: ./pretix.cfg
   pretixNginxConf:

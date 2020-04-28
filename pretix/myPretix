@@ -1,7 +1,0 @@
-FROM pretix/standalone:stable
-USER root
-COPY id_pretix_enterprise /root/.ssh/id_rsa
-COPY id_pretix_enterprise.pub /root/.ssh/id_rsa.pub
-RUN cd /pretix/src && \
-    sudo -u pretixuser make production
-USER pretixuser
