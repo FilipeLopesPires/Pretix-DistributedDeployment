@@ -125,7 +125,6 @@ As stated in their documentation, to use Pretix it is required:
 \vspace{-10pt}
 As we intended to deploy the product in containers, Docker became an additional requirement.
 
-% NUMBERS ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 
 Regarding the hardware remotely available at our department, it was allocated for us an infrastructure of a total of 58 nodes and 115 cores, with 5.6TB of 
 storage and 235.8GB of RAM available.
 However, this is destined for several developer teams, meaning that we must only use a small portion of such resources, by our estimates of less than 10\% of 
@@ -173,17 +172,73 @@ In chapter \ref{performance} we explore our own system in an attempt to determin
 
 % what are the dependencies? what components does the cluster have?
 
-...
+Docker \cite{docker} allows us to deliver the infrastructure in isolated containers with well-defined communication channels.
+This dramatically reduces infrastructure resources required and facilitates its management, while ensuring consistency within the whole environment.
+Also, its simplicity in configurations and rapid deployment makes it perfect for its use in any system with a reasonably large size and complexity.
+
+By taking advantage of Pretix' support for Docker, its dependencies were covered after analyzing which technologies would be most appropriate for our scenario.
+With an already fully functional Docker Image publicly available \cite{pretix_img}, the authors of the product made the deployment of the web application easier.
+In it is the Django-based \cite{django} web application that serves all user interaction, the web server that forwards connections to the application implemented 
+with NGinX \cite{nginx} and the Gunicorn \cite{gunicorn} instance supporting the required Web Server Gateway Interface (WSGI).
+Pretix' container configuration file also simplified the connection between the product and the storage containers, namely for the required database and caching server.
+
+To handle all storage we chose PostgreSQL \cite{postgresql}.
+This relational Database Management System (DBMS) had powerful tools to deal with scalability and redundancy, so it was quickly understood as a good option, 
+although others like MariaDB were strongly considered as well.
+It is the PostgreSQL that stores the data related to organizations, events, tickets, clients, invoices, etc.
+In our case a PostgreSQL cluster is instantiated for redundancy purposes in a Master-Slave mode.
+Currently, a single PostgreSQL master and 2 slave nodes are instantiated, and if the master fails the system is capable of assigning one of the slaves as the new master.
+
+A similar approach was followed for the server for caching.
+This server has the responsibility of storing in-memory relevant data such as open user sessions, live events, etc. and of asynchronously queuing tasks.
+In this case, the chosen tool was Redis \cite{redis}, instantiated in a Master-Slave mode with 1 master and 2 slave nodes as well.
+As it is explained in section \ref{strategy.distribution}, the failover process is also supported here.
 
 \subsection{Distribution} \label{strategy.distribution} %%%%%%%%%%%%%%%%%%%%
 
 % how exactly is the system being distributed?
 
-...
+Pgpool \cite{pgpool} was introduced in order to create a robust cluster system and avoid the single point of failure problem.
+To do this, 2 pgpool nodes are instantiated and perform lifechecks against nodes to detect faults.
+This also allows the load balancing of requests amongst nodes.
+As Pgpool can manage multiple PostgreSQL servers, using the replication function it enables the creation of a realtime backup on 2 or more physical disks so 
+that the service can continue without stopping servers in case of a disk failure.
+Pgpool's connection pooling was also considered a valuable asset in order to reduce connection overhead and improve the system's overall throughput.
+Both PostgreSQL and Pgpool have several variations of Docker images available, so we chose 2 whose configurations we found applicable for our purposes 
+\cite{postgresql_img} \cite{pgpool_img}.
+
+For Redis, 2 instances of proxies are created to distribute the load of requests and avoid the single point of failure problem.
+Once again, Docker Hub contained usable images for both the Redis instances and the proxies \cite{redis_img} \cite{redisproxy_img}.
+In this case Redis Sentinel is used to provide a deployment that resists without human intervention certain kinds of failures.
+It is the so called sentinels that monitor redis instances and start failover processes when masters are not working as expected to promote a slave replica to 
+master and reconfigure the remaining \cite{redis_sentinel}.
+
+But redundancy isn't guaranteed (with its minimum requirements) if other components outside the storage clusters have single points of failure too.
+With this in mind, we instantiate 2 Pretix containers, each connected to all Redis proxies and all Pgpool instances.
+Additionally, to handle load balancing of requests made to the web servers, we created 2 external proxies using NGinX \cite{nginx_img}. 
+These are both connected to both Pretix instances and thus allow the distribution of requests amongst web servers without adding a new single point of failure 
+(since if one proxy fails, the other is still capable of forwarding connections to the web servers).
+
+The result is visible in Figure \ref{fig:InfrastructureArchitecture}.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{.85\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{diagrams/InfrastructureArchitecture.png}
+  \end{minipage}%
+  \caption{Infrastructure architecture diagram.}
+  \label{fig:InfrastructureArchitecture}
+\end{figure} 
 
 \subsection{Deployment} \label{strategy.deployment} %%%%%%%%%%%%%%%%%%%%%%%%
 
 % how exactly is the system being deployed?
+
+There are 2 methods of deployment available: either locally or remotely in the department's installations as a docker swarm.
+Both alternatives respect the architecture mentioned above but are naturally deployed with some differences in configurations.
+
+
 
 ...
 
@@ -247,6 +302,22 @@ These were defined a priori and the expected load was set according to the analy
 
 The results of the first group of tests are presented next.
 ... \\
+
+
+
+% 400
+% 10/s
+
+% ~1 min to 400 simultaneous users
+% ~3 min test time
+
+% 9.97 Gb of Mem
+% 8 cores at 100\%
+
+
+
+
+
 
 With the system fully deployed using Docker Swarm, the second group of tests was executing, resulting in the following values.
 ... 

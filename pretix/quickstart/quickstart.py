@@ -19,7 +19,7 @@ from selenium.common.exceptions import NoSuchElementException
 # Change these variables if you wish to personalize the script
 admin_email = "admin@localhost"
 admin_pwd = "admin"
-host_address = "http://localhost:80"
+host_address = "http://localhost:7200"
 shortWaitTime = 2
 longWaitTime = 5
 organizer_name = "ws"
