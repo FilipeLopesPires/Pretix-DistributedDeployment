@@ -164,6 +164,9 @@ services:
 
   nginx: 
     image: nginx:latest
+    depends_on:
+      - web
+      - web2
     secrets:
       - source: pretixNginxConf
         target: /etc/nginx/nginx.conf
