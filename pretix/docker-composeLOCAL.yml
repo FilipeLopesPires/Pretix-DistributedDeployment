@@ -193,6 +193,9 @@ services:
 
   nginx: 
     image: nginx:latest
+    depends_on:
+      - web
+      - web2
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     configs:
