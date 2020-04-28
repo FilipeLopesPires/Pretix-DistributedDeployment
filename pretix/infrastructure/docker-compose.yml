@@ -1,5 +1,5 @@
 #
-# Title: Deployment Configuration for Docker Composed Swarm
+# Title: Deployment Configuration for Docker in Swarm MOde
 #
 # Authors: Filipe Pires (85122) and João Alegria (85048)
 #
@@ -10,12 +10,12 @@ services:
     image: bitnami/postgresql-repmgr:11
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-      - POSTGRESQL_USERNAME=customuser
-      - POSTGRESQL_PASSWORD=custompassword
-      - POSTGRESQL_DATABASE=customdatabase
+      - POSTGRESQL_USERNAME=pretix
+      - POSTGRESQL_PASSWORD=pretix
+      - POSTGRESQL_DATABASE=pretix
       - REPMGR_PASSWORD=repmgrpassword
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
     volumes:
@@ -32,12 +32,12 @@ services:
     image: bitnami/postgresql-repmgr:11
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-      - POSTGRESQL_USERNAME=customuser
-      - POSTGRESQL_PASSWORD=custompassword
-      - POSTGRESQL_DATABASE=customdatabase
+      - POSTGRESQL_USERNAME=pretix
+      - POSTGRESQL_PASSWORD=pretix
+      - POSTGRESQL_DATABASE=pretix
       - REPMGR_PASSWORD=repmgrpassword
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
     volumes:
@@ -47,29 +47,28 @@ services:
     logging:
       driver: json-file
     deploy:
-      replicas: 2
       restart_policy:
         condition: on-failure
 
-  # pg-2:
-  #   image: bitnami/postgresql-repmgr:11
-  #   environment:
-  #     - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-  #     - POSTGRESQL_USERNAME=customuser
-  #     - POSTGRESQL_PASSWORD=custompassword
-  #     - POSTGRESQL_DATABASE=customdatabase
-  #     - REPMGR_PASSWORD=repmgrpassword
-  #     - REPMGR_PRIMARY_HOST=pg-0
-  #     - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
-  #     - REPMGR_NODE_NAME=pg-2
-  #     - REPMGR_NODE_NETWORK_NAME=pg-2
-  #   volumes:
-  #     - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
-  #   networks:
-  #     - pretixPgNetwork
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
+  pg-2:
+    image: bitnami/postgresql-repmgr:11
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=pretix
+      - POSTGRESQL_PASSWORD=pretix
+      - POSTGRESQL_DATABASE=pretix
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=pg-2
+    volumes:
+      - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+    deploy:
+      restart_policy:
+        condition: on-failure
 
   pgpool:
     image: bitnami/pgpool:4
@@ -77,8 +76,8 @@ services:
       - 7232:5432
     environment:
       - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432,2:pg-2:5432
-      - PGPOOL_SR_CHECK_USER=customuser
-      - PGPOOL_SR_CHECK_PASSWORD=custompassword
+      - PGPOOL_SR_CHECK_USER=pretix
+      - PGPOOL_SR_CHECK_PASSWORD=pretix
       - PGPOOL_ENABLE_LDAP=no
       - PGPOOL_POSTGRES_USERNAME=postgres
       - PGPOOL_POSTGRES_PASSWORD=adminpassword
@@ -87,9 +86,6 @@ services:
       - PGPOOL_ENABLE_LOAD_BALANCING=yes
     healthcheck:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - pretixPgNetwork
     logging:
@@ -100,7 +96,7 @@ services:
         condition: on-failure
 
   redisproxy:
-    image: 10.2.0.1:5000/pretixhaproxy
+    image: 10.2.0.1:5000/pretixredisproxy
     # build: ./haproxy
     ports:
       - 7279:6379
@@ -143,7 +139,6 @@ services:
 
   redissentinel:
     image: 10.2.0.1:5000/pretixredissentinel
-    # build: ./redisSentinel
     environment:
       - MASTER_NAME=mymaster
       - QUORUM=1
@@ -159,11 +154,13 @@ services:
         condition: on-failure
         
   web:
-    image: pretix/standalone:stable
+    image: 10.2.0.1:5000/pretixmypretix
     volumes:
       - /nfs/pretix/web/pretix:/etc/pretix:rw
       - /nfs/pretix/web/data:/data:rw
-      - /nfs/pretix/wait-for-it.sh:/wait-for-it.sh
+    environment:
+      - POSTGRESIP=pgpool
+      - REDISIP=redisproxy
     ports:
       - 7201:80
     networks:
