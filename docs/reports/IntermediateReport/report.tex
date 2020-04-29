@@ -364,9 +364,14 @@ person that wishes to quickly experiment our infrastructure without having to kn
 % what is to be done until the final delivery?
 % docker secrets, fault tolerance, 
 
-With the intermediate development phase complete, our concerns shift towards making the solution more fault tolerant, scalable, reliable and in general more robust.
+Although with a service stack already replicated, redundant and tolerant to failures, now that we have a better understanding of the service itself, it's bottlenecks and it's behavior when handling with higher volumes of data and incoming requests we can personalize and optimize the stack for Pretix itself. For that reason our concerns shifted towards making the solution more fault tolerant, scalable, reliable and in general more robust, taking advantage of the already obtained conclusions on what components limited our service and needed more attention.
 
-...
+A big aspect that we already considered, but was from the beginning destined to be tackled in the second and last delivery of this project is the handling of errors, crashes and traffic fluctuations. In practical terms this is translated in the development of automatic mechanisms that allows the infrastructure manager to be certain that a service will never fail or to quickly scale the service's stack according to incoming traffic. Some efforts related to this theme were already made on this first delivery, namely the implementation of clusters for both of the storage systems necessary for Pretix; our implementation of both clusters already guarantees replication and redundancy of information and tolerant to failures since any node can fail, redefining the cluster if necessary.
+
+The proposed further work in this area is to develop Ansible scripts that will enable us to scale automatically our service stack and possibly handle automatically with service crashes and their respective redeployment. Ansible \cite{ansible} is a IT automation engine that automates cloud provisioning, configuration management, application deployment, intra-service orchestration, and many other IT needs, exactly the type of engine we needed to further improve our service infrastructure.
+
+Some more questions will be taken in consideration, namely security. By injecting any password needed to services through the secrets Docker API we aim to achieve a more secure and penetration resistant system. This was already done with configuration files needed to be injected in some of our services, but we intend to extend this process to any critical information, such as passwords.
+
 
 \subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%%%
 
@@ -447,6 +452,13 @@ contributing equally.
     \url{https://www.selenium.dev/about/}.
     Software Freedom Conservancy,
     retrieved in April 2020.
+
+  \bibitem{ansible}
+    \textit{Ansible},
+    \url{https://www.ansible.com/}.
+    Red Hat,
+    retrieved in April 2020.
+    
 
 \end{thebibliography}
 
