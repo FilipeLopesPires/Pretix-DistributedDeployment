@@ -79,7 +79,7 @@ scans, etc.), and even administrative control (with statistics and event-spannin
 
 As a complete solution, Pretix has already been successfully used for conferences, festivals, concerts, shows, exhibitions, workshops, barcamps, and more 
 according to the creators.
-The software's source code is completely open source \cite{pretixgit}, and the authors make available extensive documentation \cite{pretixdoc}, an installation 
+The software's source code is completely open \cite{pretixgit}, and the authors make available extensive documentation \cite{pretixdoc}, an installation 
 guide and a support blog.
 
 \subsection{Our Product} \label{pretix.product} %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,7 +100,7 @@ In order to ensure the fulfillment of our contract, a representative scenario of
 A simulated organization intends to host a WebSummit-like event by the end of this year.
 It has analysed the feature list of Pretix and wishes to adopt it in the future.
 However, as it is its first time using the software, the company decided to use it simply as a ticket purchase platform and reduced the payment methods to 
-on-site manual payment only. % NUMBERS ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
+on-site manual payment only. 
 The organization expects to sell 10 000 tickets in a week and warned us that in previous events they witnessed a peak close to the end of the selling period.
 
 In practical terms this means that we only need to concern ourselves with the online ticket purchasing features and do not even need to consider the actual 
@@ -178,7 +178,10 @@ Also, its simplicity in configurations and rapid deployment makes it perfect for
 
 By taking advantage of Pretix' support for Docker, its dependencies were covered after analyzing which technologies would be most appropriate for our scenario.
 With an already fully functional Docker Image publicly available \cite{pretix_img}, the authors of the product made the deployment of the web application easier.
-In it is the Django-based \cite{django} web application that serves all the services and resources needed for Pretix, a instance of Gunicorn \cite{gunicorn}, a Web Server Gateway Interface (WSGI) hosting the mentioned Django application and lastly an instance of NGinX \cite{nginx}, a reverse-proxy needed to allow the for the Django application in production mode, since that framework when in production divides the static resources(that should be served by a reverse-proxy) and the dynamic resources that are assured by Django itself.
+In it is the Django-based \cite{django} web application that provides all the services and resources of Pretix, an instance of Gunicorn \cite{gunicorn}, a 
+Web Server Gateway Interface (WSGI) hosting the application, and lastly an instance of NGinX \cite{nginx}, a reverse-proxy for the web application deployment 
+in production mode - this last component is needed because the Django framework, when in production, divides the static resources and the dynamic resources and 
+worries only about the dynamic ones, assuming that a reverse-proxy serves de static ones. 
 Pretix' container configuration file also simplified the connection between the product and the storage containers, namely for the required database and caching server.
 
 To handle all storage we chose PostgreSQL \cite{postgresql}.
@@ -186,45 +189,68 @@ This relational Database Management System (DBMS) had powerful tools to deal wit
 although others like MariaDB were strongly considered as well.
 It is the PostgreSQL that stores the data related to organizations, events, tickets, clients, invoices, etc.
 In our case a PostgreSQL cluster is instantiated for redundancy purposes in a Master-Slave mode.
-Currently, a single PostgreSQL master and 2 slave nodes are instantiated, and if the master fails the system is capable of assigning one of the slaves as the new master.
+Currently, a single PostgreSQL master and 2 slave nodes are instantiated, and if the master fails the system is capable of assigning one of the slaves as the 
+new master.
 
-A similar approach was followed for the server for caching.
+A similar approach was followed for the caching server.
 This server has the responsibility of storing in-memory relevant data such as open user sessions, live events, etc. and of asynchronously queuing tasks.
-In this case, the chosen tool was Redis \cite{redis}, instantiated in a Master-Slave cluster mode with 1 master and 2 slave nodes as well. The failover process is also supported with the help of sentinels. Sentinels are nodes natively supported by redis which hava the responsibility of over-watching the cluster and in case any change occurs, such as the addition or removal of a node(slave or master), it registers that modification and notifies the necessary nodes so that they can do the appropriate action. In our case we opted to instantiate two sentinels.  
+In this case, the chosen tool was Redis \cite{redis}, instantiated in a Master-Slave cluster mode with 1 master and 2 slave nodes as well. 
+The failover process is also supported with the help of sentinels. 
+Sentinels are nodes natively supported by redis which have the responsibility of over-watching / taking care of the cluster and in case any change occurs, 
+such as the addition or removal of a (slave or master) node, it registers that modification and notifies the necessary nodes so that they can reconfigure themselves. 
+In our case we opted to instantiate two sentinels. \\
 
-A problem encountered during the infrastructure development and configuration was the fact that if a master node really crashed in one of the storage clusters, the connection to the storage infrastructure were lost since the connection to the cluster is through it's master(s). Being in a distributed environment and the master machine being down, the Pretix service was incapable of locating the new master. This fact in addition to the efforts made in balancing the load to the service, cause in we making the additional effort of finding a proxy for both clusters.
+A problem encountered during the infrastructure configuration was that if a master node crashed in one of the storage clusters, the connection to the storage 
+infrastructure was lost since the association to the cluster is through it's master(s).
+With the master machine down in a distributed environment, the service was incapable of locating the new master. 
+This and the efforts applied in balancing the load to the service forced us to add a proxy for both clusters.
 
-Pgpool \cite{pgpool} was introduced for that reason. This is a middleware that works between PostgreSQL servers and PostgreSQL clients, and enables connection pooling, replication, load balancing and more, but the mentioned features were the ones interesting for us.
-This component served as a proxy that by connecting to it always redirected to the master of the PostgreSQL cluster and if there were more than one master in the cluster the requests will be distributed in a balanced fashion over the available masters. 
+Pgpool \cite{pgpool} was introduced to solve the problem for the PostgreSQL cluster. 
+This middleware works between PostgreSQL servers and clients and enables connection pooling, replication, load balancing and more, although we used only the first
+3 features.
+This component served as a proxy that, when connected to, always redirects requests to the master of the PostgreSQL cluster and, if there was more than 1 master, 
+the requests would be distributed in a balanced way over the available masters. 
 
-For Redis, an HAProxy \cite{haproxy} was found to be the best option for our scenario, since it provided us a reliable and high performing load balancer. This component, similarly to the one mentioned above, works as a proxy that forwards the request to the redis cluster always to one of it's main, as well as balanced the load in case more than one master is present.
+For the Redis cluster, an HAProxy \cite{haproxy} was found to be the best option for our scenario, since it provided us a reliable and high performing load balancer.
+This component, similarly to the one mentioned above, works as a proxy that forwards requests to one of the cluster masters, balancing the load in case there 
+are severel master nodes.
 
-The last component of our architecture is a reverse-proxy of our own, implemented using NginX, with the objective of balancing the requests made to the Pretix service itself. This component, as suggested by the name reverse-proxy, also enabled us to access multiple instances of the Pretix server through a unique endpoint, facilitating the interaction between clients and service.
+The last component of our architecture is a reverse-proxy of our own, implemented using NginX, with the aim to balance the requests made to the Pretix service itself. 
+This component, as suggested by the name reverse-proxy, also enabled us to access multiple instances of the Pretix server through a unique endpoint, facilitating 
+the interaction between clients and service.
 
-To provide this service we focused on some aspects that we considered paramount: availability, consistency, maintainability, scalability, redundancy, fault tolerance and load balancing. Those were the reasons we implemented the storage infrastructures as clusters, we implemented the mentioned proxies, both for the storages systems and the service itself, and we made every service redundant by having replicas, or through clusters.
-
-The result is visible in Figure \ref{fig:InfrastructureArchitecture}.
-
-\begin{figure}[!h]
+\begin{figure}[H]
   \centering
   \begin{minipage}{.85\textwidth}
     \centering
     \includegraphics[width=\linewidth]{diagrams/InfrastructureArchitecture.png}
   \end{minipage}%
-  \caption{Infrastructure architecture diagram.}
+  \caption{Infrastructure architecture diagram deployed in Docker Swarm.}
   \label{fig:InfrastructureArchitecture}
-\end{figure} 
+\end{figure}
 
+To provide this service we focused on some aspects that we considered paramount: availability, consistency, maintainability, scalability, redundancy, fault 
+tolerance and load balancing. 
+Those were the quality attributes we were looking to achieve when making every service redundant (by having replicas or through clusters), and when implementing 
+the storage infrastructures as clusters and the mentioned proxies (for the storage systems and the service itself).
+The result is visible in Figure \ref{fig:InfrastructureArchitecture}.
 
 \subsection{Deployment} \label{strategy.deployment} %%%%%%%%%%%%%%%%%%%%%%%%
 
 % how exactly is the system being deployed?
 
-For this project there are 2 methods available to deploy the service stack: in a normal docker through the usage of Docker Compose or in Docker Swarm mode. The intended method was the second one, a deployment in Docker Swarm since a shared powerful infrastructure hosted in the DETI's department was made available for all groups. We then implemented a stack deployment for Docker Swarm but also developed a deployment for the normal Docker Compose, since the two are very similar. Both alternatives respect the architecture mentioned above but are naturally deployed with some differences in configurations, since each mode supports different features.
+For this project there are 2 methods available to deploy the service stack: in a traditional Docker deployment through the usage of Docker Compose or in Docker 
+Swarm mode.
+The intended method was the second one, since the powerful infrastructure hosted in the DETI's department was made available for all groups. 
+However, it was implemented not only a stack deployment for Docker Swarm but also one for the normal Docker Compose, since the second could be used for testing 
+purposes. 
+Both implementations respect our architecture but are naturally deployed with some differences in configurations, since each mode supports different features.
 
-To create this stack much research was made to find the best already available solutions and containers that suited our needs. This as well as the integration of every component to the remaining ones turned out to be quite more challenging and complex than previously assumed. In the ended we settled in the following images for our components:
-
-\begin{itemize}
+An experimentation phase occurred when searching for the best available solutions and containers that would suit our needs.
+This in itself was quite a challenge, but the integration process of all containers proved to be far more challenging and complex than previously presumed.
+The final version uses the following images from Docker Hub:
+\vspace{-10pt}
+\begin{itemize} [noitemsep]
   \item PostgreSQL Master/Slave: \url{https://hub.docker.com/r/bitnami/postgresql-repmgr}
   \item PostgreSQL Pool(PgPool): \url{https://hub.docker.com/r/bitnami/pgpool}
   \item Redis Master/Slave/Sentinel: \url{https://hub.docker.com/_/redis}
@@ -232,10 +258,17 @@ To create this stack much research was made to find the best already available s
   \item Pretix: \url{https://hub.docker.com/r/pretix/standalone}
   \item NginX: \url{https://hub.docker.com/_/nginx}
 \end{itemize}
+\vspace{-10pt}
+Obviously, some of these images serve only as a base for self created images. 
+This was desirable because in certain situations we needed a higher degree of control (e.g. for a container to wait for other containers to start first). 
+This necessity for self-created images happened with: the Redis Slave image, to configure the Redis server to be a slave of a given machine and wait for the 
+cluster master; the Redis Sentinel, to configure the Redis server to behave as a sentinel of the cluster and wait for the cluster master; the Redis Proxy, to 
+configure the HAProxy so that the proxy would have in consideration all redis nodes and always access the master; and with Pretix itself, for the container 
+to wait for the PostgreSQL and the Redis Proxies.
 
-Obviously, some of this images serves as base for self created images. This was necessary and desirable because in certain situation we needed a higher degree of control, e.g., for a container to wait for other containers to start first. This necessity for self-created images happen in the Redis Slave to configure the Redis server to be a slave of a given machine and wait for the cluster master, in the Redis Sentinel to configure the Redis server to behave as a sentinel of the cluster and wait for the cluster master, the Redis Proxy to configure the HAProxy so that the proxy would have in consideration all redis nodes and access always the master and in Pretix for the container to wait for the PostgreSQL and the Redis Proxies.
-
-With each component defined we needed a way to connect them all, and a unique network didn't seem the best option. We decided to divide the stack in a logical way, each cluster had it's own network, NginX had its own network and the Pretix service was the linking element between the three networks.
+With each component defined, the stack was divided logically in 3 networks: each cluster belongs to one of the networks, NGinX has its own network, and the 
+Pretix service is the linking element between the 3 networks.
+This is also represented in Figure \ref{fig:InfrastructureArchitecture}.
 
 Another aspect that we took in consideration was the data produced by the application itself. We needed a consistent and fault-tolerant system, so the data produced by the system could not be lost in any situation. For that reason we needed create and assign volumes to the containers so that no information was lost even if all services crashed. All volumes were defined and mount at a previously defined Network File System(NFS) provided by the discipline's professor.
 
@@ -472,44 +505,114 @@ contributing equally.
     \textit{GIC - Report no.1: Simple Product Operation},
     University of Aveiro,
     2019/20.
+    \vspace{-10pt}
 
   \bibitem{pretix}
     \textit{About Pretix},
     \url{https://pretix.eu/about/en/}.
     Pretix.eu,
     retrieved in April 2020.
+    \vspace{-10pt}
 
   \bibitem{rami.io}
     \textit{Welcome to Rami.io},
     \url{https://rami.io/}.
     Rami.io,
     retrieved in April 2020.
+    \vspace{-10pt}
 
   \bibitem{pretixgit}
     \textit{Pretix Code Repository},
     \url{https://github.com/pretix/pretix}.
-    GuitHub, Inc.,
+    GitHub, Inc.,
     retrieved in April 2020.
+    \vspace{-10pt}
 
   \bibitem{pretixdoc}
     \textit{Welcome to pretix' documentation!},
     \url{https://docs.pretix.eu/en/latest/}.
     Pretix.eu,
     retrieved in April 2020.
+    \vspace{-10pt}
 
+  \bibitem{docker}
+    \textit{Docker Homepage},
+    \url{https://www.docker.com/}.
+    Docker Inc.,
+    retrieved in April 2020.
+    \vspace{-26pt}
 
+  \bibitem{pretix_img}
+    \textit{pretix/standalone},
+    \url{https://hub.docker.com/r/pretix/standalone}.
+    pretix,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{django}
+    \textit{Meet Django},
+    \url{https://www.djangoproject.com/}.
+    Django Software Foundation and individual contributors,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{gunicorn}
+    \textit{Gunicorn Homepage},
+    \url{https://gunicorn.org/}.
+    Gunicorn.org,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{nginx}
+    \textit{NGinX News},
+    \url{https://nginx.org/}.
+    NGinX.org,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{postgresql}
+    \textit{PostgreSQL: The World's Most Advanced Open Source Relational Database},
+    \url{https://www.postgresql.org/}.
+    The PostgreSQL Global Development Group,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{redis}
+    \textit{About Redis},
+    \url{https://redis.io/}.
+    Redis Labs,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{pgpool}
+    \textit{Welcome to Pgpool-II},
+    \url{https://www.pgpool.net/mediawiki/index.php/Main_Page}.
+    PgPool Global Development Group,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  \bibitem{haproxy}
+    \textit{HAProxy: The Reliable, High Performance TCP/HTTP Load Balancer},
+    \url{https://www.haproxy.org/}.
+    HAProxy.org,
+    retrieved in April 2020.
+    \vspace{-10pt}
+
+  
 
   \bibitem{locust}
     \textit{Locust, an open source load testing tool},
     \url{https://locust.io/}.
     Locust.io,
     retrieved in April 2020.
+    \vspace{-10pt}
 
   \bibitem{selenium}
     \textit{About Selenium},
     \url{https://www.selenium.dev/about/}.
     Software Freedom Conservancy,
     retrieved in April 2020.
+    \vspace{-10pt}
 
 \end{thebibliography}
 
