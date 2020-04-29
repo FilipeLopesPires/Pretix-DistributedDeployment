@@ -20,8 +20,8 @@ from selenium.common.exceptions import NoSuchElementException
 admin_email = "admin@localhost"
 admin_pwd = "admin"
 host_address = "http://localhost:7200"
-shortWaitTime = 2
-longWaitTime = 5
+shortWaitTime = 5
+longWaitTime = 10
 organizer_name = "ws"
 token_name = "t1"
 event_name = "ws2020"
