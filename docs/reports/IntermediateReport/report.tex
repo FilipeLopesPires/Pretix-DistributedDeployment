@@ -251,12 +251,12 @@ This in itself was quite a challenge, but the integration process of all contain
 The final version uses the following images from Docker Hub:
 \vspace{-10pt}
 \begin{itemize} [noitemsep]
-  \item PostgreSQL Master/Slave: \url{https://hub.docker.com/r/bitnami/postgresql-repmgr}
-  \item PostgreSQL Pool(PgPool): \url{https://hub.docker.com/r/bitnami/pgpool}
-  \item Redis Master/Slave/Sentinel: \url{https://hub.docker.com/_/redis}
-  \item Redis Proxy: \url{https://hub.docker.com/_/haproxy}
-  \item Pretix: \url{https://hub.docker.com/r/pretix/standalone}
-  \item NginX: \url{https://hub.docker.com/_/nginx}
+  \item PostgreSQL Master/Slave: \href{https://hub.docker.com/r/bitnami/postgresql-repmgr}{https://hub.docker.com/r/bitnami/postgresql-repmgr}
+  \item PostgreSQL Pool(PgPool): \href{https://hub.docker.com/r/bitnami/pgpool}{https://hub.docker.com/r/bitnami/pgpool}
+  \item Redis Master/Slave/Sentinel: \href{https://hub.docker.com/\_/redis}{https://hub.docker.com/\_/redis}
+  \item Redis Proxy: \href{https://hub.docker.com/\_/haproxy}{https://hub.docker.com/\_/haproxy}
+  \item Pretix: \href{https://hub.docker.com/r/pretix/standalone}{https://hub.docker.com/r/pretix/standalone}
+  \item NginX: \href{https://hub.docker.com/\_/nginx}{https://hub.docker.com/\_/nginx}
 \end{itemize}
 \vspace{-10pt}
 Obviously, some of these images serve only as a base for self created images. 
@@ -270,24 +270,43 @@ With each component defined, the stack was divided logically in 3 networks: each
 Pretix service is the linking element between the 3 networks.
 This is also represented in Figure \ref{fig:InfrastructureArchitecture}.
 
-Another aspect that we took in consideration was the data produced by the application itself. We needed a consistent and fault-tolerant system, so the data produced by the system could not be lost in any situation. For that reason we needed create and assign volumes to the containers so that no information was lost even if all services crashed. All volumes were defined and mount at a previously defined Network File System(NFS) provided by the discipline's professor.
+Another aspect that we took in consideration was the data produced by the application itself. 
+We needed a consistent and fault-tolerant system, so the data produced could not be lost under no circumstances. 
+So volumes were assigned to the containers so that no information was lost, even if all services crashed.
+All volumes were defined and mounted in a Network File System (NFS) provided \textit{a priori} for the discipline.
 
-Lastly, we had some configuration files that needed to be injected to some containers, namely the Pretix server and the NginX reverse-proxy. We decided that the best way to inject those files to those containers is by secrets. In our stack definition file we defined those files as secrets and to which container each secret should be assigned. Those secrets are generated automatically when the stack is deployed. 
+Lastly, some configuration files needed to be injected into containers, namely the Pretix server and the NginX reverse-proxy. 
+To do this, we resort to the so called secrets: in our stack definition file, those configuration files were defined as secrets along with their destinations; 
+such secrets are then generated automatically when the stack is deployed. 
 
-Both Docker Compose and Docker Swarm accepts the same stack configuration file. This is quite useful since the same configuration file we developed for the Swarm mode allows the deployment in both of them. But as already mentioned, there are significant differences between them, that in practical terms translates to certain fields being proceed in a mode and not in the other, namely the \texttt{deploy}, \texttt{configs} and \texttt{secrets} fields are not processed in the Compose mode. This meant that the automatic replication provided by Swarm is not available as well as the inject of configuration files and secret files. For that reason, since we mostly debugged and tested locally in normal docker with Docker Compose, we felt the need to create a auxiliary stack configuration file that would deploy the system with exact copy of the one in Swarm(missing the NginX replication). In this file the only changes were the mounting point for the volumes, since this configuration was not intended to be deploy in the remote infrastructure, the replication had to be made manually by creating different containers and the otherwise configuration files injected by secrets API needed to be injected as volumes.
+Both Docker Compose and Docker Swarm accept the same stack configuration file. 
+This is quite useful as it avoided duplicated work.
+Nevertheless, as we have mentioned, there are significant differences between the 2 deployment methods, that in practical terms translates to certain fields 
+being present in a mode and not in the other, namely the \texttt{deploy}, \texttt{configs} and \texttt{secrets} fields that are not processed in the Compose mode.
+This meant that the automatic replication provided by Swarm is not available as well as the inject of configuration files and secret files. 
+And since we mostly debugged and tested locally with Docker Compose, we felt the need to create an auxiliary stack configuration file that would deploy the 
+system that replicates the one in Swarm (except for the NginX replication). 
+In this file, the only changes were: the mounting point for the volumes (as this configuration was not intended to be deploy in the remote infrastructure); the 
+replication (manually defined by creating different containers); and the configuration files otherwise injected by secrets API (now injected as volumes).
 
 \subsection{Distribution} \label{strategy.distribution} %%%%%%%%%%%%%%%%%%%%
 
 % how exactly is the system being distributed?
-Docker Swarm not only adds some quite important features in the quality assuring realm, such as replication, load balancing and more, but it does that in a distributed way. This mode allows the Swarm mode to spread across as much machines as the user wants. The provided remote infrastructure is spread across three machine, where in each one several virtual machines were then created so that the swarm had even more agents to use, simulating a truly heterogeneous and distributed environment.
 
-Because we deploy our service stack in the Docker Swarm established in the remote infrastructure, our stack was distributed by design, which was one of the feature that appealed us in the beginning. This basically means that independently of the available machines, the number of machines, the machines' operational system, the location of the machine, and so on, installing docker on all of them and establishing the Swarm mode across all of them, we can safely guarantee that our stack can be deploy in that scenario and it will work as well as in the current one.
+Docker Swarm not only adds some quite important features in the quality assuring realm (replication, load balancing, etc.), but it does that in a distributed way. 
+This allows the Swarm mode to spread across as many machines as the user wants. 
+The provided remote infrastructure is spread across 3 machines, each with several virtual machines created so that the swarm has more agents to use and thus 
+simulating a truly heterogeneous and distributed environment.
+
+Because we deploy our service stack in the Docker Swarm established in the remote infrastructure, our stack was distributed by design, which was one of the 
+characteristics that appealed us in the beginning. 
+This basically means that independently of the available machines, the number of machines, the machines' operational system, the location of the machine, and so on, installing docker on all of them and establishing the Swarm mode across all of them, we can safely guarantee that our stack can be deploy in that scenario and it will work as well as in the current one.
 
 Through the usage of the provided platform, we concluded that the distribution is made automatically by assigning a task to an agent. A task is normally a replica of a service and the agent is a machine running a docker daemon somewhere in the Swarm network. Since each service consists in one or more replicas, they are spread across the Swarm network as the platform finds fit.
 
 This distribution is quite important since it enables the user to gain access to the power of not only one machine, but all assigned to tasks of his stack, making possible smaller response times. This does not happen when a local deployment with Docker Compose is made, since this approach uses only one machine for all services needed, overloading all computational resources and possibly increasing the response times since the machine is worker more when compared to the ones in Swarm mode.
 
-
+\newpage
 \section{Current Cluster Performance} \label{performance} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % what was done to evaluate its current performance?
@@ -343,9 +362,23 @@ which were surpassed with greater hardware capacity and which appeared only in t
 
 The 4 phases consisted in load testing the solution with 4 different activity peaks: one with half the expected load, one with the expected load, one with 
 twice as many expected users and one with 10 times as many users.
-These were defined a priori and the expected load was set according to the analysis described in section \ref{pretix.requirements}. \\
+These were defined a priori and the expected load was set according to the analysis described in section \ref{pretix.requirements}. 
+
+It is important to mention that some failed requests were treated in a particular manner after reflecting on the issue.
+This is the case for accessing requests to the ticket purchase root path and for completing a purchase process.
+In these situations the fictitious user attempts to successfully execute them 3 times.
+This was decided after considering that in reality, an interested client would not mind to have to reload a page in the event it failed the first time, even more 
+if this would occur in the completing action of the ticket purchase.
+Although this naturally improved the results, all failures were considered in our overall evaluation.
+Failures are here distinguished from 3-times failures by naming the later as exceptions. \\
 
 The results of the first group of tests are presented next.
+For the local tests it is important to consider the hardware used and its activity in stand-by.
+It was used a computer with 12Gb of RAM and 8 CPU cores; before any tests were executed, 1 thread was running with CPU at 10\% of its capacity and around 6Gb 
+of memory being used.
+
+The first locust swarm attacked the service with 400 clients, with a hatch rate of 20 per second (the maximum rate found for the hardware to handle).
+The attack took about 1 minute and 26 seconds, with the swarm complete 34 seconds after initialization.
 ... \\
 
 
