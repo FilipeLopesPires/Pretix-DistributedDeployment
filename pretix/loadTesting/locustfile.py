@@ -30,7 +30,7 @@ host = "http://10.2.0.1:7200/" # swarm
 #token = "g6ohu79cix5111huvhs63ksjdvxsis6aksijlptpy3y1ffaie8re7xskkg43vkjc" # swarm
 token = os.environ["TOKEN"] # test container
 #nUsers = 10
-nUsers=os.environ["USERS"]
+nUsers=int(os.environ["USERS"])
 
 # These variables hold the codes of the errors that occur and their frequencies
 getFailures = {}
@@ -216,7 +216,7 @@ class UserBehavior(TaskSet):
                
         for i in range(0,len(r)):
             for j in range(0,len(r[i])):
-                attempts = 3
+                attempts = int(os.environ["ATTEMPTS"])
                 
                 if i==(len(r)-1) and j==0: # if POST
                     #body = '{"detail":"", "email": "' + user_email + '","locale": "en","sales_channel": "web","invoice_address": {"is_business": "false","company": "Sample company","name_parts": {"full_name": "John Doe"},"street": "Sesam Street 12","zipcode": "12345","city": "Sample City","state": "","internal_reference": "","vat_id": ""},"positions": [{"item": 1,"attendee_name_parts": {"full_name": "Peter"},"answers": [{"question": '+str(question)+',"answer": "23","options": []}]}] }'
