@@ -1,5 +1,7 @@
 #
 # Title: Deployment Configuration for Docker in Swarm MOde
+# 
+# Description: Use this file to deploy on DETI's dedicated infrastructure. This is meant to be deployed in Docker Swarm mode.
 #
 # Authors: Filipe Pires (85122) and João Alegria (85048)
 #

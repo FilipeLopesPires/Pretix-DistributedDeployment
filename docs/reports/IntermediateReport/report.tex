@@ -476,8 +476,6 @@ second (with the red line corresponding to failures).
 % 800
 % 20/s
 
-%  (start),  (all users),  (end)
-
 % Mem 9.87Gb / 11.6Gb
 % 8 cores at ~70\%
 % 8 thr running
@@ -490,8 +488,6 @@ second (with the red line corresponding to failures).
 
 % 1600
 % 20/s
-
-%  (start),  (all users),  (end)
 
 % Mem 10.0Gb / 11.6Gb
 % 8 cores at ~70\%
@@ -506,8 +502,6 @@ second (with the red line corresponding to failures).
 % 8000
 % 20/s
 
-%  (start),  (all users),  (end)
-
 % Mem 10.8Gb / 11.6Gb
 % 8 cores at ~70\%
 % 8 thr running
@@ -519,8 +513,115 @@ second (with the red line corresponding to failures).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 With the system fully deployed using Docker Swarm, the second group of tests was performed, and their results are presented next.
+Note that the machine running these tests had a different capacity than that of the local tests, running Ubuntu 18.0.4 with 2 CPUs and 4Gb of RAM (the reason 
+for this is explained in section \ref{performance.bottlenecks}).
+As it was a remote machine, the monitoring of its behavior was very limited.
 
-... 
+The first swarm attacked the service with 400 clients, with a hatch rate of 20 per second.
+The attack took about 5 minutes and 20 seconds, with the swarm complete around 30 seconds after initialization.
+This compared to the local tests was already very different, with a delay of 4 minutes.
+The average response time of all API requests aggregated was 5767ms
+About the same number of requests were made as the ones from the local tests, with a discouraging amount of order-post failures reaching 178.
+This means that, of the 400 users that attempted to purchase a ticket to our event, almost half of them (44.5\%) were unable to do so.
+Additionally, the \texttt{409 Conflict} (see section \ref{performance.bottlenecks} for more on this error) was not the only error message returned, meaning that 
+this percentage was in fact much higher due to errors of type \texttt{502 Bad Gateway}, \texttt{504 Gateway Timeout} and the more generic type 
+\texttt{500 Internal Server Error}.
+We had reached the maximum response capacity of the system with half the users we hoped to support.
+
+To deal with such discovery, we adapted the remaining tests to lower amounts of users, as deploying 8000 locusts under such circumstances was unthinkable.
+The second locust swarm attacked the service with 100 clients, with the same hatch rate as before.
+This time only \texttt{409 Conflict} errors occurred but the results were still very poor.
+With an average response time of 6 seconds for order-posts and 2 seconds for the aggregation of requests, 62 users failed to complete the purchase out of the 100.
+
+We moved on to test with 200 and 250 users in order to determine the point at which errors of type \texttt{500} or greater started to occur in a significant amount.
+Response times grew steady, but we realized that beyond 200 users, the system had many difficulties in dealing with all requests.
+The best results found were with 200 users, with a success rate of around 55\% and very few or even no errors of type \texttt{500}, \texttt{502} or \texttt{504}.
+These server errors made us suspect that the bottleneck could be an overload of NGinX or the web nodes, so we attempted to deploy twice as many replicas of each 
+and ran the same tests.
+However, at first sight, this seemed to add no significant improvement to the results.
+It was also tried to increase the number of attempts from 3 to 10 when the server response would be \texttt{409} (these attempts are also explained in the next 
+section) and this obviously improved the apparent results,
+but 10\% of the clients would still be responded with \texttt{409 Conflict} 10 times when sending an order-post and the additional sent requests also increased
+the amount of errors of type \texttt{500}.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=.95\linewidth]{tests/swarm/200/number_of_users_1588271033.png}
+  \end{minipage}%
+  \label{fig:LocalTests:number_of_users}
+  \begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=.95\linewidth]{tests/swarm/200/response_times_(ms)_1588271033.png}
+  \end{minipage}%
+  \label{fig:LocalTests:response_times_(ms)}
+  \begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=.95\linewidth]{tests/swarm/200/total_requests_per_second_1588271033.png}
+  \end{minipage}%
+  \caption{Load tests results with 200 users in Docker Swarm.}
+  \label{fig:LocalTests:total_requests_per_second}
+\end{figure}
+\vspace{-10pt}
+
+The closing locust swarm sent an attack of 50 users.
+This test was run several times and on average only 16 failed to complete the purchase (with 3 failed attempts).
+This seemed to be the fairest amount of users the current infrastructure is able to support simultaneously while providing a reasonable performance.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 50
+% 20/s
+
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	74 	        46 	      16            2000 	        17000 	      4970 	        425 	    20315
+%       Aggregated                                    2341 	      46 	      -             63 	          1500 	        912 	        3 	      32236
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 100
+% 20/s
+
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	202   	    138 	    62            1900 	        18000 	      6003 	        326 	    28477
+%       Aggregated                                    5102 	      138 	    -             200 	        8800 	        1974 	        3 	      34930
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 200
+% 20/s
+
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	308 	      243 	    108           5200 	        23000 	      8675 	        295 	    42395 	
+%       Aggregated                                    9488 	      243 	    -             180 	        18000 	      3801 	        3 	      63114 	
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 250
+% 20/s
+
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	362 	      239 	    84            1800 	        38000 	      11743 	      274 	    53261
+%       Aggregated                                    11925     	297 	    -             170 	        25000 	      4899 	        3 	      90735 	
+
+% postFailures = {500: 7, 409: 84}
+% getFailures = {500: 7}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 400
+% 20/s
+
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	599 	      492 	    178           2000 	        45000 	      12104 	      3 	      60399
+%       Aggregated                                    19010 	    1224 	    -             210 	        23000 	      5767 	        3 	      117999 	
+
+% postFailures = {502: 54, 409: 178, 504: 17, 500: 5}
+% getFailures = {500: 45, 502: 467, 504: 220}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \subsection{Bottlenecks} \label{performance.bottlenecks} %%%%%%%%%%%%%%%%%%%
 
@@ -532,11 +633,9 @@ when load testing.
 
 The first aspect to consider is how the failures were truly computed.
 Locust returns a failed request when the server's response code isn't within 200 and 299, but we noticed a case where this had to be treated differently.
-Pretix' documentation states that \texttt{409 Conflict} responses "are intended to be retried" and their occurrence were responsibility of the service's 
-implementation itself.
-Due to the lack of extensive documentation regarding this, we decided to simplify the problem and for every API request attempt 3 times if the response had 
-that code.
-The final numbers correspond to this form of error counting.
+Pretix' documentation states that \texttt{409 Conflict} responses "are intended to be retried" and their occurrence were due to the service's implementation itself.
+With a lack of documentation on this, we decided to simplify and for every API request attempt 3 times if the response had that code.
+Our counts correspond to this form of error counting.
 
 The second aspect applies to the load tests executed in Docker Swarm mode.
 In this scenario the first clear bottleneck was the internet connection between the attacker computer and the department's infrastructure.
@@ -545,9 +644,28 @@ The alternative was to build containers dedicated to perform the locust swarm an
 the services themselves.
 Such adaptation in a way made the test less real, since the physical distance between server and client is practically none, but in another increased realism 
 since clients would probably be purchasing tickets from different networks and thus would never saturate the connection to the server like it was occurring with 
-our initial tests.
+our initial tests. \\
 
-... \\
+After performing a diagnosis on what could be limiting the infrastructure's performance, we came to a few hypothesis.
+The first had to do with the overall connection capacity that was not ideal from the beginning.
+The bandwidth was limited to 100 Mb per second and, with a purchase process as heavy as ours (that implies many data exchanges of invoices, images, etc.), the 
+connection could quickly get saturated.
+Other factor not directly related to our solution itself was the usage of shared remote resources.
+During development many setbacks appeared from external factors such as the used VPN's configuration, and load tests became more frequent amongst developers by 
+the end of the delivery date, resulting in far more activity and thus slower responses.
+This could be very much connected to the occurrence of the errors of type \texttt{500} or greater.
+
+Regarding aspects with greater value for our future work, a few conclusions were reached.
+First of all, we understood Pretix' service was not optimized to receive as many requests as we initially thought.
+This could even be related to an incorrect interpretation from us of the numbers provided by them, i.e. Pretix' authors state the service supports 500 users per 
+minute which is about 8 users per second, but our tests had moments where almost twice as many users were finishing their orders.
+The way our load tests work, the way locust works, does not allow us to control this and activity peaks always occur, so the results are greatly affected.
+
+Nevertheless we understand that the provided Docker image of Pretix might not be their most refined solution, keeping that one for themselves and their paid 
+partnerships.
+This could also help explain why so many responses of type \texttt{409 Conflict} are returned, although we were not able to pin point exactly why their 
+implementation fosters such responses.
+
 
 ...
 

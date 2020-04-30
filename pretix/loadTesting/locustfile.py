@@ -6,7 +6,10 @@ Description:
 Python script that defines the behavior of the locust threads to load test Pretix by swarming it with ticket purchase requests of fictitious users.
 Locust's UI is accessible at http://localhost:8089.
 
-Notes: Install requirements before running this file. Change the values of the global variables for your own usage.
+Notes: 
+Install requirements before running this file. 
+Change the values of the global variables for your own usage.
+This file is also prepared to be executed inside DETI's infrastructure and from containers aimed at load testing the service from outside of your own computer.
 
 Authors: Filipe Pires (85122) and João Alegria (85048)
 
@@ -29,6 +32,7 @@ token = os.environ["TOKEN"] # test container
 #nUsers = 10
 nUsers=os.environ["USERS"]
 
+# These variables hold the codes of the errors that occur and their frequencies
 getFailures = {}
 postFailures = {}
 

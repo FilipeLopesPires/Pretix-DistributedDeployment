@@ -1,6 +1,8 @@
 #
 # Title: Deployment Configuration for Local Docker Compose
 #
+# Description: Use this file to deploy our services in your machine. It should work on the first try if you wait a few minutes until the web services are really up. But if the web containers go right at the beginning, rebuild them along with NGinX.
+#
 # Authors: Filipe Pires (85122) and João Alegria (85048)
 #
 
