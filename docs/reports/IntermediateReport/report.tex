@@ -648,7 +648,7 @@ The alternative was to build containers dedicated to perform the locust swarm an
 the services themselves.
 Such adaptation in a way made the test less real, since the physical distance between server and client is practically none, but in another increased realism 
 since clients would probably be purchasing tickets from different networks and thus would never saturate the connection to the server like it was occurring with 
-our initial tests. \\
+our initial tests.
 
 After performing a diagnosis on what could be limiting the infrastructure's performance, we came to a few hypothesis.
 The first had to do with the overall connection capacity that was not ideal from the beginning. 
@@ -669,9 +669,6 @@ Nevertheless we understand that the provided Docker image of Pretix might not be
 partnerships.
 This could also help explain why so many responses of type \texttt{409 Conflict} are returned, although we were not able to pin point exactly why their 
 implementation fosters such responses. 
-
-
-...
 
 \newpage
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -717,7 +714,10 @@ By injecting any password needed to services through the secrets Docker API we a
 This was already done with configuration files needed to be injected in some of our services, but we intend to extend this process to any critical information 
 such as passwords.
 
-Lastly, a monitoring solution will also be implemented, since that is a crucial aspect of any system in production. A monitoring platform gives all the feedback and insights necessary for the infrastructure manager to make decisions, such as scale the service stack or intervene in a possible security breach or significant bug. The framework we intend to use is still being decided, but we already researched and found some options that can suit our scenario.
+Lastly, a monitoring solution will also be implemented, since that is a crucial aspect of any system in production. 
+A monitoring platform gives all the feedback and insights necessary for the infrastructure manager to make decisions, such as scale the service stack or 
+intervene in a possible security breach or significant bug. 
+The framework we intend to use is still being decided, but we already researched and found some options that can suit our scenario.
 
 \subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%%%
 
@@ -743,15 +743,30 @@ Pretix' features were explored by both developers in order to better comprehend 
 Then, João focused on the deployment of our solution on the department's infrastructure while Filipe focused on creating and executing the load tests.
 The analysis of the results were carefully conducted in conjunction as well, in order to maintain a common knowledge for better workflows.
 It is needless to say that bug and error solving was made along the development phase by both developers any time it was required.
-
 Once performance benchmarking and bottleneck identification were completed, this report and the code documentation became our primary concern, with both 
 contributing equally.
 
 \newpage
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-...
+The results of our load tests were quite demotivating, since it was understood that Pretix could support much less users we had once expected.
+Nevertheless the outcome allowed us to look at the overall solution with different eyes and understand where were we thinking in a not so correct way and where 
+were our weak spots, those of Pretix and those of the department's hardware as well.
+The bottleneck analysis turned out to be not as conclusive as one could whish for, as they appear to have much to do with Pretix' implementation itself.
+To deal with this, some code analysis will have to be executed in parallel to the continuation of the project.
 
+If once we had some questions regarding the complexity of maintaining a service in the cloud, today there is no doubt about the importance of the work of those 
+that ensure its correct functioning and constant availability.
+Many concepts we had discussed during classes and in prior courses were explored in great depth through this practical hands-on assignment.
+And although the difficulties are constant and the challenges are many, we have now reached a point where we are eager to see how far can our solutions go in 
+terms of performance and quality.
+
+We complete this intermediate phase knowing our service in far greater detail when compared to when we started exploring Pretix' features.
+With the gathered information, we intend to overcome or at least attenuate its flaws and improve the infrastructure's performance and monitoring capabilities.
+Our perspective on the work delivered and here described is very positive, since we were able to configure a complete, redundant, fault-tolerant and maintainable 
+infrastructure based on Docker Compose and Swarm with smart strategies such as those within our clusters and useful additions such as the Docker secrets feature.
+
+\newpage
 \begin{thebibliography}{9} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   \bibliographystyle{Science}
 
