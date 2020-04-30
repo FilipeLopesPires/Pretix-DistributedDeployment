@@ -300,11 +300,22 @@ simulating a truly heterogeneous and distributed environment.
 
 Because we deploy our service stack in the Docker Swarm established in the remote infrastructure, our stack was distributed by design, which was one of the 
 characteristics that appealed us in the beginning. 
-This basically means that independently of the available machines, the number of machines, the machines' operational system, the location of the machine, and so on, installing docker on all of them and establishing the Swarm mode across all of them, we can safely guarantee that our stack can be deploy in that scenario and it will work as well as in the current one.
+This basically means that independently of the available machines, the number of machines, their operational system, their location, and so on, installing docker 
+on all of them and establishing the Swarm mode across all, safely guarantees that the stack can be deployed in such scenario and it will work just as expected.
 
-Through the usage of the provided platform, we concluded that the distribution is made automatically by assigning a task to an agent. A task is normally a replica of a service and the agent is a machine running a docker daemon somewhere in the Swarm network. Since each service consists in one or more replicas, they are spread across the Swarm network as the platform finds fit.
+Through the usage of the provided platform, we concluded that the distribution is made automatically by assigning a task to an agent. 
+A task is normally a replica of a service and the agent is a machine running a docker daemon somewhere in the Swarm network. 
+Since each service consists in one or more replicas, they are spread across the Swarm network as the platform finds fit.
+This distribution is quite important since it enables the user to gain access to the power of not only one machine, but all those assigned to tasks of his stack, 
+making possible smaller response times. 
+This does not happen when a local deployment with Docker Compose is made, since this approach uses only one machine for all services needed, overloading all 
+computational resources and thus increasing the response times.
 
-This distribution is quite important since it enables the user to gain access to the power of not only one machine, but all assigned to tasks of his stack, making possible smaller response times. This does not happen when a local deployment with Docker Compose is made, since this approach uses only one machine for all services needed, overloading all computational resources and possibly increasing the response times since the machine is worker more when compared to the ones in Swarm mode.
+However, no solution is perfect and this is no exception.
+While locally the bottleneck is clearly CPU and RAM capacity, in an infrastructure such as the one provided in the department additional factors play a role in 
+the overall performance, namely the communication speed amongst machines and the networks' bandwidths available.
+The ideal solution is one where these aspects have a capacity proportional to the processing capacity of the machines themselves, but as we will see further 
+ahead this unfortunately isn't quite the reality.
 
 \newpage
 \section{Current Cluster Performance} \label{performance} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -357,30 +368,79 @@ that would give us more comfort regarding the faithfulness of the results.
 Having established the behavior of the fictitious users, we proceeded to actually executing our benchmarking.
 This was divided in 2 groups of tests of 4 phases each.
 The first group was entirely performed locally in one of our personal computers, the second was performed remotely using our Docker Swarm.
-This was done in order to clearly comprehend the differences of performance between the 2 deployment methods and detect which bottlenecks were common to both, 
-which were surpassed with greater hardware capacity and which appeared only in the second group (if any).
+This was done in order to clearly comprehend the differences of performance between the 2 deployment methods and detect which bottlenecks were common to both 
+and which appeared only in the second group (if any).
 
 The 4 phases consisted in load testing the solution with 4 different activity peaks: one with half the expected load, one with the expected load, one with 
 twice as many expected users and one with 10 times as many users.
 These were defined a priori and the expected load was set according to the analysis described in section \ref{pretix.requirements}. 
 
-It is important to mention that some failed requests were treated in a particular manner after reflecting on the issue.
-This is the case for accessing requests to the ticket purchase root path and for completing a purchase process.
-In these situations the fictitious user attempts to successfully execute them 3 times.
-This was decided after considering that in reality, an interested client would not mind to have to reload a page in the event it failed the first time, even more 
-if this would occur in the completing action of the ticket purchase.
-Although this naturally improved the results, all failures were considered in our overall evaluation.
-Failures are here distinguished from 3-times failures by naming the later as exceptions. \\
+% It is important to mention that some failed requests were treated in a particular manner after reflecting on the issue.
+% This is the case for accessing requests to the ticket purchase root path and for completing a purchase process.
+% In these situations the fictitious user attempts to successfully execute them 3 times.
+% This was decided after considering that in reality, an interested client would not mind to have to reload a page in the event it failed the first time, even more 
+% if this would occur in the completing action of the ticket purchase.
+% Although this naturally improved the results, all failures were considered in our overall evaluation.
+% Failures are here distinguished from 3-times failures by naming the later as exceptions. \\
 
 The results of the first group of tests are presented next.
 For the local tests it is important to consider the hardware used and its activity in stand-by.
 It was used a computer with 12Gb of RAM and 8 CPU cores; before any tests were executed, 1 thread was running with CPU at 10\% of its capacity and around 6Gb 
 of memory being used.
+Each phase was executed 5 times, so the values here presented are always an average of such executions in order to remove potential noise from the results.
 
 The first locust swarm attacked the service with 400 clients, with a hatch rate of 20 per second (the maximum rate found for the hardware to handle).
 The attack took about 1 minute and 26 seconds, with the swarm complete 34 seconds after initialization.
-... \\
+The average response time of all API requests aggregated was 737ms (with the fastest being 3ms and the slowest response taking 50278ms).
+Over 22000 requests were made in that period, with only 3 failures corresponding to POST requests of the actual purchasing final action (henceforward referred
+to as order-post).
+This means that, of the 400 users that attempted to purchase a ticket to our event, 3 of them were unable to do so, resulting in a success rate of 99.25\%.
+Note that during this test the computer maintained all cores working at around 70\% capacity and the memory reached a maximum peak of 9.63Gb.
 
+For the second locust swarm, 800 clients were hatched - our target number - at the same rate as before.
+The attack duration was of 2 minutes and 32 seconds, with the swarm complete after around 1 minute of execution.
+The aggregate response times almost duplicated at an average of 1700ms, although for the order-post only raised from 1000ms to 1300ms.
+Under this scenario the amount of errors kept the same, resulting in a success rate of 99.625\%.
+Hardware usage was very similar to the first phase, with a slight increase in memory usage to 9.87Gb.
+
+In the third phase the infrastructure behaved as expected.
+Amongst the 1600 users hatched, 6 of them were unable to purchase a ticket.
+Response times increased to an average of 3000ms both aggregated and on the order-post, with some users having to wait almost 2 minutes for the order completion.
+CPU usage kept steady at 70\% and RAM increased to 10.0Gb.
+This phase took over 6 minutes, with the 100th user hatched after 2 minutes of execution.
+
+The fourth and final phase was by far the slowest, although its results were positive.
+We realized from the beginning that these tests would be compromised by the hardware hosting them, but this was specially true when attempting to test 8000 
+simultaneous user.
+Hatching them took over 10 minutes and their execution lasted for almost 40 minutes.
+Memory was completely used at about 10.8Gb making the 8 threads suffer from "hiccups".
+From the 8000 users, 37 were unable to purchase a ticket, but many of those that were able had to wait over 15 minutes to do so, which would be completely 
+unacceptable in a real case scenario.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{tests/local/800/number_of_users_1588097887.png}
+  \end{minipage}%
+  \label{fig:LocalTests:number_of_users}
+  \begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{tests/local/800/response_times_(ms)_1588097887.png}
+  \end{minipage}%
+  \label{fig:LocalTests:response_times_(ms)}
+  \begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{tests/local/800/total_requests_per_second_1588097887.png}
+  \end{minipage}%
+  \caption{Load tests results with 800 users.}
+  \label{fig:LocalTests:total_requests_per_second}
+\end{figure}
+\vspace{-10pt}
+
+Figure \ref{fig:LocalTests:total_requests_per_second} contains 3 graphics taken from Locust's web UI, with the first corresponding to the number of hatched 
+users over time, the second to the response times in milliseconds (green line is the median values, yellow is in 95\% percentile), and the total requests per
+second (with the red line corresponding to failures).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -407,9 +467,9 @@ The attack took about 1 minute and 26 seconds, with the swarm complete 34 second
 % 8 cores at ~70\%
 % 8 thr running
 
-% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms) 	Average size (bytes)
-% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	456 	      59 	      3             810 	        1500 	        1024 	        150 	    11199 	  1098
-%       Aggregated                                    22435       59        -             610           990           737           3         50278     71693 
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	456 	      59 	      3             810 	        1500 	        1024 	        150 	    11199
+%       Aggregated                                    22435       59        -             610           990           737           3         50278 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -422,9 +482,9 @@ The attack took about 1 minute and 26 seconds, with the swarm complete 34 second
 % 8 cores at ~70\%
 % 8 thr running
 
-% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms) 	Average size (bytes)
-% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	906 	      109 	    3             1300 	        1800 	        1325 	        165 	    8682 	    1093
-%       Aggregated                                    44885       369       -             1100          1700          1343          2         83344     71436
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms) 
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	906 	      109 	    3             1300 	        1800 	        1325 	        165 	    8682 	
+%       Aggregated                                    44885       369       -             1100          1700          1343          2         83344 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -437,9 +497,9 @@ The attack took about 1 minute and 26 seconds, with the swarm complete 34 second
 % 8 cores at ~70\%
 % 8 thr running
 
-% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms) 	Average size (bytes)
-% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	1772 	      178 	    6             1800 	        3200 	        2904 	        173 	    121762 	  1122
-%       Aggregated 	                                  89730 	    1426 	    -             1400 	        3200 	        3232 	        2 	      181509 	  70780
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms) 
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	1772 	      178 	    6             1800 	        3200 	        2904 	        173 	    121762
+%       Aggregated 	                                  89730 	    1426 	    -             1400 	        3200 	        3232 	        2 	      181509
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -452,20 +512,42 @@ The attack took about 1 minute and 26 seconds, with the swarm complete 34 second
 % 8 cores at ~70\%
 % 8 thr running
 
-% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms) 	Average size (bytes)
-% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	9177 	      1214 	    37            2700 	        5000 	        15635 	      62 	      1022473 	995
-%       Aggregated 	                                  448918 	    10898 	  -             1900 	        4600 	        20335 	      2 	      1579377 	70336
+% Type 	Name 	                                        # Requests 	# Fails   # Exceptions  Median (ms) 	90%ile (ms) 	Average (ms) 	Min (ms) 	Max (ms)
+% POST 	/api/v1/organizers/ws/events/ws2020/orders/ 	9177 	      1214 	    37            2700 	        5000 	        15635 	      62 	      1022473 
+%       Aggregated 	                                  448918 	    10898 	  -             1900 	        4600 	        20335 	      2 	      1579377 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+With the system fully deployed using Docker Swarm, the second group of tests was performed, and their results are presented next.
 
-
-With the system fully deployed using Docker Swarm, the second group of tests was executing, resulting in the following values.
 ... 
 
 \subsection{Bottlenecks} \label{performance.bottlenecks} %%%%%%%%%%%%%%%%%%%
 
 % what performance bottlenecks were found?
+
+Before presenting our analysis to the results, a few remarks must be presented as well - a sort of pre-analysis.
+This allows the reader to greatly understand the external constraints that limited our ability to test the infrastructure and thus influenced our approaches 
+when load testing.
+
+The first aspect to consider is how the failures were truly computed.
+Locust returns a failed request when the server's response code isn't within 200 and 299, but we noticed a case where this had to be treated differently.
+Pretix' documentation states that \texttt{409 Conflict} responses "are intended to be retried" and their occurrence were responsibility of the service's 
+implementation itself.
+Due to the lack of extensive documentation regarding this, we decided to simplify the problem and for every API request attempt 3 times if the response had 
+that code.
+The final numbers correspond to this form of error counting.
+
+The second aspect applies to the load tests executed in Docker Swarm mode.
+In this scenario the first clear bottleneck was the internet connection between the attacker computer and the department's infrastructure.
+This rendered tests invalid and even brought problems to our own computers so it was quickly forgotten as a form of testing.
+The alternative was to build containers dedicated to perform the locust swarm and launch them in one of the remote machines available for us and separate from 
+the services themselves.
+Such adaptation in a way made the test less real, since the physical distance between server and client is practically none, but in another increased realism 
+since clients would probably be purchasing tickets from different networks and thus would never saturate the connection to the server like it was occurring with 
+our initial tests.
+
+... \\
 
 ...
 
@@ -481,7 +563,7 @@ As many of our tests assumed the existence of organizers and events already inse
 manually created before proceeding with some implementation process.
 
 In order to respond to this need, we developed a Python script capable of completely dispose of the manual labour.
-This script, which we called \texttt{quickstart.py} and placed under the scripts folder, uses Selenium \cite{selenium} to create an organization inside Pretix, 
+This script, which we called \texttt{quickstart.py} and placed under a dedicated folder, uses Selenium \cite{selenium} to create an organization inside Pretix, 
 generate a secret API key for sending REST requests (storing it in a text file), create a default event and prepare it for load testing with Locust.
 It also contains configurable variables to personalize its output.
 
@@ -493,14 +575,25 @@ person that wishes to quickly experiment our infrastructure without having to kn
 % what is to be done until the final delivery?
 % docker secrets, fault tolerance, 
 
-Although with a service stack already replicated, redundant and tolerant to failures, now that we have a better understanding of the service itself, it's bottlenecks and it's behavior when handling with higher volumes of data and incoming requests we can personalize and optimize the stack for Pretix itself. For that reason our concerns shifted towards making the solution more fault tolerant, scalable, reliable and in general more robust, taking advantage of the already obtained conclusions on what components limited our service and needed more attention.
+Providing a service like Pretix proved to be quite a challenge given its complexity, dependencies and considering the quality attributes we were aiming to achieve.
+Once our efforts reached solid results, we came to gain deep knowledge about what was truly being provided to clients, what bottlenecks our infrastructure has 
+and how it behaves when handling great volumes of requests.
+With the gathered information, it is now possible to personalize and optimize the stack for Pretix to achieve a better overall performance.
+The basis has been established to proceed towards making the solution more fault tolerant, scalable, reliable and define monitoring strategies.
 
-A big aspect that we already considered, but was from the beginning destined to be tackled in the second and last delivery of this project is the handling of errors, crashes and traffic fluctuations. In practical terms this is translated in the development of automatic mechanisms that allows the infrastructure manager to be certain that a service will never fail or to quickly scale the service's stack according to incoming traffic. Some efforts related to this theme were already made on this first delivery, namely the implementation of clusters for both of the storage systems necessary for Pretix; our implementation of both clusters already guarantees replication and redundancy of information and tolerant to failures since any node can fail, redefining the cluster if necessary.
+The goal now is to develop automatic mechanisms that will allow the infrastructure manager to easily deal with traffic fluctuations and handle errors and crashes.
+We intend to provide tools that ensure the manager that a service never fails and that allow a quick escalation of the stack according to incoming traffic.
+Part has already been tackled so far, namely the implementation of clusters for both of the storage systems necessary for Pretix, which already guarantees 
+replication and redundancy of information, and fault tolerance as well, but this is to be improved for the final delivery.
 
-The proposed further work in this area is to develop Ansible scripts that will enable us to scale automatically our service stack and possibly handle automatically with service crashes and their respective redeployment. Ansible \cite{ansible} is a IT automation engine that automates cloud provisioning, configuration management, application deployment, intra-service orchestration, and many other IT needs, exactly the type of engine we needed to further improve our service infrastructure.
+To do this, we intend to develop Ansible scripts that will enable automatic service stack scaling and possibly automatic service crash handling and redeployment.
+Ansible \cite{ansible} is an IT automation engine that automates cloud provisioning, configuration management, application deployment, intra-service orchestration 
+and many other IT needs, exactly the type of engine we need to further improve our infrastructure.
 
-Some more questions will be taken in consideration, namely security. By injecting any password needed to services through the secrets Docker API we aim to achieve a more secure and penetration resistant system. This was already done with configuration files needed to be injected in some of our services, but we intend to extend this process to any critical information, such as passwords.
-
+Additional aspects will be taken in consideration, namely security. 
+By injecting any password needed to services through the secrets Docker API we aim to achieve a more secure and penetration resistant system. 
+This was already done with configuration files needed to be injected in some of our services, but we intend to extend this process to any critical information 
+such as passwords.
 
 \subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%%%
 
