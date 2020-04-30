@@ -13,6 +13,7 @@ Authors: Filipe Pires (85122) and João Alegria (85048)
 '''
 
 from locust import * #HttpLocust, TaskSet, between, task
+import os
 #import time
 #import requests
 
@@ -23,8 +24,10 @@ question = 1
 # host = "http://localhost:7200/" # local
 # token = "5iz3l7fwaw1s2mzxipbs8xdcew0bxr77uwrn7tbx5v47ac3s51fqeby34afp9u8a" # local
 host = "http://10.2.0.1:7200/" # swarm
-token = "g6ohu79cix5111huvhs63ksjdvxsis6aksijlptpy3y1ffaie8re7xskkg43vkjc" # swarm
-nUsers = 10
+#token = "g6ohu79cix5111huvhs63ksjdvxsis6aksijlptpy3y1ffaie8re7xskkg43vkjc" # swarm
+token = os.environ["TOKEN"] # test container
+#nUsers = 10
+nUsers=os.environ["USERS"]
 
 getFailures = {}
 postFailures = {}
