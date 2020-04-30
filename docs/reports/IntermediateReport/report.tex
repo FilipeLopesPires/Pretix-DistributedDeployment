@@ -168,7 +168,7 @@ In chapter \ref{performance} we explore our own system in an attempt to determin
 \newpage
 \section{Clustering Strategy} \label{strategy} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Architecture} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%%% 
+\subsection{Deployment Architecture and Service Decomposition} \label{strategy.architecture} %%%%%%%%%%%%%%%%%%%% 
 
 % what are the dependencies? what components does the cluster have?
 
@@ -285,9 +285,13 @@ Nevertheless, as we have mentioned, there are significant differences between th
 being present in a mode and not in the other, namely the \texttt{deploy}, \texttt{configs} and \texttt{secrets} fields that are not processed in the Compose mode.
 This meant that the automatic replication provided by Swarm is not available as well as the inject of configuration files and secret files. 
 And since we mostly debugged and tested locally with Docker Compose, we felt the need to create an auxiliary stack configuration file that would deploy the 
-system that replicates the one in Swarm (except for the NginX replication). 
+system that basically replicates the one in Swarm. 
 In this file, the only changes were: the mounting point for the volumes (as this configuration was not intended to be deploy in the remote infrastructure); the 
-replication (manually defined by creating different containers); and the configuration files otherwise injected by secrets API (now injected as volumes).
+replication (manually defined by creating different containers); and the configuration files otherwise injected by secrets API (now injected as volumes). Furthermore, a simplification was made since the Compose replication was made manually; in Compose we deployed with the minimum replication and redundancy, meaning that we only had one replica of each service: the clusters consists of 1 master and 2 slaves, the proxies and the main server have only 2 replicas, where in Swarm we had at least three instances of a service, clusters were kept the same, proxies with 3 replicas and the service with 5 replicas(since it is the most important component and the one assumed to be the bottleneck in the stack).
+
+A last remark needs to be made related to the deployment section and the reason behind some practical decisions and configurations we made. We already explained the reasons behind our deployment architecture and service decomposition, such as the implementation of clusters and replication of services to increase the fault tolerance, availability, consistency, etc. But in the Swarm stack configuration file there are two distinct ways of replicating a service, using the replication feature provided by Swarm itself and replicated manually, such as the slaves in the PostgreSQL cluster. This difference is caused purely by practical limitations; the solution used for the PostgreSQL cluster needs nodes with different configurations, and consequently different services to accommodate those configurations. This limitation  was tested by ourselves. The remaining services are configured so that a direct replication is possible.
+
+In this delivery, the number of replications and cluster sizes were conservative since the intent is to make a proof of concept and learn more about the service provided and the constraints it has. In further work we intend to increase these values as necessary.
 
 \subsection{Distribution} \label{strategy.distribution} %%%%%%%%%%%%%%%%%%%%
 
@@ -594,6 +598,8 @@ Additional aspects will be taken in consideration, namely security.
 By injecting any password needed to services through the secrets Docker API we aim to achieve a more secure and penetration resistant system. 
 This was already done with configuration files needed to be injected in some of our services, but we intend to extend this process to any critical information 
 such as passwords.
+
+Lastly, a monitoring solution will also be implemented, since that is a crucial aspect of any system in production. A monitoring platform gives all the feedback and insights necessary for the infrastructure manager to make decisions, such as scale the service stack or intervene in a possible security breach or significant bug. The framework we intend to use is still being decided, but we already researched and found some options that can suit our scenario.
 
 \subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%%%
 
