@@ -116,13 +116,16 @@ services:
         condition: on-failure
 
   redismaster:
-      image: redis:5.0.9-alpine
-      volumes:
-        - /nfs/pretix/redis/master:/data:rw
-      logging:
-        driver: json-file
-      networks:
-        - pretixRedisNetwork
+    #image: redis:5.0.9-alpine
+    build: ../components/redisMaster
+    volumes:
+      - /nfs/pretix/redis/master:/data:rw
+    logging:
+      driver: json-file
+    networks:
+      - pretixRedisNetwork
+    ports:
+      - 9121:9121
 
   redisslave:
     image: 10.2.0.1:5000/pretixredisslave
