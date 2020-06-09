@@ -50,5 +50,9 @@ do
     COUNT=$((COUNT + 1))
 done
 
+wget https://github.com/prometheus/haproxy_exporter/archive/master.zip 
+unzip ./master.zip
+cd ./haproxy_exporter-master && make build && ./haproxy_exporter-master --web.listen-address=":9101" &
+
 echo "=> Starting HAProxy"
 exec "/docker-entrypoint.sh" "$@"
