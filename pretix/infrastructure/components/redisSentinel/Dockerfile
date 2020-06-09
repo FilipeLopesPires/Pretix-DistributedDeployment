@@ -12,4 +12,6 @@ RUN chmod +x /wait-for-it.sh
 
 EXPOSE 26379
 
+EXPOSE 9121
+
 ENTRYPOINT ["/entrypoint.sh"]

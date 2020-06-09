@@ -9,7 +9,8 @@
 version: '3.3'
 services:
   pg-0:
-    image: bitnami/postgresql-repmgr:11
+    #image: bitnami/postgresql-repmgr:11
+    build: ../components/pgpool
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customusername
@@ -24,9 +25,12 @@ services:
       - postgresmaster:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
+    ports:
+      - 9187:9187
 
   pg-1:
-    image: bitnami/postgresql-repmgr:11
+    #image: bitnami/postgresql-repmgr:11
+    build: ../components/pgpool
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customusername
@@ -41,9 +45,12 @@ services:
       - postgresslave1:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
+    ports:
+      - 9188:9187
 
   pg-2:
-    image: bitnami/postgresql-repmgr:11
+    #image: bitnami/postgresql-repmgr:11
+    build: ../components/pgpool
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customusername
@@ -58,6 +65,8 @@ services:
       - postgresslave2:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
+    ports:
+      - 9189:9187
 
   pgpool:
     image: bitnami/pgpool:4
@@ -91,13 +100,18 @@ services:
       - REDIS_HOSTS=redismaster, redisslave, redisslave2
     networks:
       - pretixRedisNetwork
+    ports:
+      - 9101:9101
 
   redismaster:
-      image: redis:5.0.9-alpine
-      volumes:
-        - redis1:/data
-      networks:
-        - pretixRedisNetwork
+    #image: redis:5.0.9-alpine
+    build: ../components/redisMaster
+    volumes:
+      - redis1:/data
+    networks:
+      - pretixRedisNetwork
+    ports:
+      - 9121:9121
 
   redisslave:
     build: ../components/redisSlave
@@ -106,7 +120,9 @@ services:
     volumes:
       - redis2:/data
     networks:
-        - pretixRedisNetwork
+      - pretixRedisNetwork
+    ports:
+      - 9122:9121
 
   redisslave2:
     build: ../components/redisSlave
@@ -115,7 +131,9 @@ services:
     volumes:
       - redis3:/data
     networks:
-        - pretixRedisNetwork
+      - pretixRedisNetwork
+    ports:
+      - 9123:9121
 
   redissentinel:
     build: ../components/redisSentinel
@@ -126,7 +144,9 @@ services:
     volumes:
       - redis4:/data
     networks:
-        - pretixRedisNetwork
+      - pretixRedisNetwork
+    ports:
+      - 9124:9121
 
   redissentinel2:
     build: ../components/redisSentinel
@@ -137,7 +157,9 @@ services:
     volumes:
       - redis4:/data
     networks:
-        - pretixRedisNetwork
+      - pretixRedisNetwork
+    ports:
+      - 9125:9121
         
   web:
     build: ../components/myPretix
@@ -176,7 +198,8 @@ services:
       - pretixRedisNetwork
 
   nginx: 
-    image: nginx:latest
+    #image: nginx:latest
+    build: ../components/nginx
     depends_on:
       - web
       - web2
@@ -185,6 +208,7 @@ services:
         target: /etc/nginx/nginx.conf
     ports:
       - 7200:80
+      - 9913:9913
     networks:
       - pretixOut
 
