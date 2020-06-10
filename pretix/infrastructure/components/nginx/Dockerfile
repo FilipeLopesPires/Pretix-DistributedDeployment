@@ -1,15 +1,8 @@
 FROM nginx:latest
 
-#RUN apk add --no-cache \
-#        curl \
-#        bash
-
-RUN apt-get update
-RUN apt-get install wget -y 
-RUN apt-get install curl -y
-#RUN apt-get install make
-#RUN apt-get install golang -y
-#RUN apt-get install git -y
+RUN apt-get update -q
+RUN apt-get install wget -y -q
+RUN apt-get install curl -y -q
 
 COPY ./nginx-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/nginx-entrypoint.sh

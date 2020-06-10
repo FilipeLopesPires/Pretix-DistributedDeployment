@@ -1,6 +1,6 @@
 FROM redis:5.0.9-alpine
 
-RUN apk add --no-cache \
+RUN apk add --quiet --no-cache \
         curl \
         bash
 

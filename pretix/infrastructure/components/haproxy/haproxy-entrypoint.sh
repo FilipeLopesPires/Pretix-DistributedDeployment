@@ -50,8 +50,8 @@ do
     COUNT=$((COUNT + 1))
 done
 
-wget https://github.com/prometheus/haproxy_exporter/archive/master.zip 
-unzip ./master.zip
+wget -q https://github.com/prometheus/haproxy_exporter/archive/master.zip 
+unzip -q ./master.zip
 cd ./haproxy_exporter-master && make build && ./haproxy_exporter-master --web.listen-address=":9101" &
 
 curl -f -s -H "Content-Type: application/json" -d "{\"service\":\"$NAME\"}" 10.5.0.108:9999/service &

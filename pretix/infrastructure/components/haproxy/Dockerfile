@@ -1,11 +1,11 @@
 FROM haproxy:1.7
 
-RUN apt-get update
-RUN apt-get install wget -y 
-RUN apt-get install unzip
-RUN apt-get install make
-RUN apt-get install curl -y
-RUN apt-get install golang -y
+RUN apt-get update -q
+RUN apt-get install wget -y -q
+RUN apt-get install unzip -q
+RUN apt-get install make -q
+RUN apt-get install curl -y -q
+RUN apt-get install golang -y -q
 
 COPY haproxy-entrypoint.sh /
 
