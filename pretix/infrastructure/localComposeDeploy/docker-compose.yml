@@ -92,8 +92,6 @@ services:
 
   redisproxy:
     build: ../components/haproxy
-    ports:
-      - 7279:6379
     environment:
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=password
@@ -102,6 +100,7 @@ services:
       - pretixRedisNetwork
     ports:
       - 9101:9101
+      - 7279:6379
 
   redismaster:
     #image: redis:5.0.9-alpine

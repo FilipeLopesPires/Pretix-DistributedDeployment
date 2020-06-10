@@ -25,9 +25,9 @@ rule_files:
 scrape_configs:
 
   - job_name: 'snmp'
-    static_configs:
-      - targets:
-        - 10.2.0.4  # SNMP device.
+    file_sd_configs:
+      - files:
+        - 'exporters/snmp_targets.json'
     metrics_path: /snmp
     params:
       module: [test]
@@ -39,21 +39,50 @@ scrape_configs:
       - target_label: __address__
         replacement: 127.0.0.1:9116  # The SNMP exporter's real hostname:port.
 
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  #- job_name: 'prometheus'
+  - job_name: 'redisproxy'
+    file_sd_configs:
+      - files:
+        - 'exporters/redisproxy_targets.json'
 
-    # Override the global default and scrape targets from this job every 5 seconds.
-   # scrape_interval: 5s
-   # scrape_timeout: 5s
+  - job_name: 'redisslave'
+    file_sd_configs:
+      - files:
+        - 'exporters/redisslave_targets.json'
 
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
+  - job_name: 'redissentinel'
+    file_sd_configs:
+      - files:
+        - 'exporters/redissentinel_targets.json'
 
-    #static_configs:
-     # - targets: ['localhost:9090']
+  - job_name: 'redismaster'
+    file_sd_configs:
+      - files:
+        - 'exporters/redismaster_targets.json'
 
-  #- job_name: node
-    # If prometheus-node-exporter is installed, grab stats about the local
-    # machine by default.
-    #static_configs:
-    #  - targets: ['localhost:9100']
+  - job_name: 'web'
+    file_sd_configs:
+      - files:
+        - 'exporters/web_targets.json'
+
+  - job_name: 'nginx'
+    file_sd_configs:
+      - files:
+        - 'exporters/nginx_targets.json'
+
+  - job_name: 'pga'
+    file_sd_configs:
+      - files:
+        - 'exporters/pga_targets.json'
+
+  - job_name: 'pgb'
+    file_sd_configs:
+      - files:
+        - 'exporters/pgb_targets.json'
+
+  - job_name: 'pgc'
+    file_sd_configs:
+      - files:
+        - 'exporters/pgc_targets.json'
+
+  
+
