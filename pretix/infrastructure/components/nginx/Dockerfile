@@ -6,6 +6,7 @@ FROM nginx:latest
 
 RUN apt-get update
 RUN apt-get install wget -y 
+RUN apt-get install curl -y
 #RUN apt-get install make
 #RUN apt-get install golang -y
 #RUN apt-get install git -y

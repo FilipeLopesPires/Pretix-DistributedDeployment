@@ -10,7 +10,7 @@ version: '3.3'
 services:
   pg-0:
     #image: bitnami/postgresql-repmgr:11
-    build: ../components/pgpool
+    build: ../components/postgres
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customusername
@@ -30,7 +30,7 @@ services:
 
   pg-1:
     #image: bitnami/postgresql-repmgr:11
-    build: ../components/pgpool
+    build: ../components/postgres
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customusername
@@ -50,7 +50,7 @@ services:
 
   pg-2:
     #image: bitnami/postgresql-repmgr:11
-    build: ../components/pgpool
+    build: ../components/postgres
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
       - POSTGRESQL_USERNAME=customusername
@@ -69,7 +69,8 @@ services:
       - 9189:9187
 
   pgpool:
-    image: bitnami/pgpool:4
+    #image: bitnami/pgpool:4
+    build: ../components/pgpool
     ports:
       - 7232:5432
     environment:

@@ -1,20 +1,15 @@
-FROM bitnami/postgresql-repmgr:11
+FROM bitnami/pgpool:4
 USER root
 
 RUN apt-get update
-RUN apt-get install wget -y 
-
-COPY ./get-exporter.sh /
-RUN chmod +x /get-exporter.sh
-RUN /get-exporter.sh
+RUN apt-get install curl -y
 
 COPY ./entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 9187
+EXPOSE 5432
 
 USER 1001
-
 ENTRYPOINT ["entrypoint.sh"]
-
-CMD [ "/opt/bitnami/scripts/postgresql-repmgr/run.sh" ]
+#ENTRYPOINT [ "/opt/bitnami/scripts/pgpool/entrypoint.sh" ]
+CMD [ "/opt/bitnami/scripts/pgpool/run.sh" ]
