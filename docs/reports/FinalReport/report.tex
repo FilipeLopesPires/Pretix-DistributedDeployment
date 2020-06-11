@@ -56,7 +56,7 @@ Management \cite{assign} from the Msc. degree in Informatics Engineering of the 
 Informatics.
 It is assumed that the reader has knowledge about the previous report, and it is here included:
 the characterization of the service level agreements for each service;
-the description of the load balancing mechanisms amongst software components;
+the description of the load balancing mechanisms among software components;
 the redundancy strategy;
 the listing of metrics and computational resources monitored, along with the respective defined alarms;
 and other relevant aspects such as horizontal scalability and component fault tolerance.
@@ -100,16 +100,6 @@ All code developed is publicly accessible in our GitHub repository:
 % \end{figure} 
 
 % \begin{figure}[H]
-%  \centering
-%  \begin{minipage}{.85\textwidth}
-%    \centering
-%    \includegraphics[width=\linewidth]{diagrams/InfrastructureArchitecture.png}
-%  \end{minipage}%
-%  \caption{Infrastructure architecture diagram deployed in Docker Swarm.}
-%  \label{fig:InfrastructureArchitecture}
-% \end{figure}
-
-% \begin{figure}[H]
 %   \centering
 %   \begin{minipage}{\textwidth}
 %     \centering
@@ -137,32 +127,129 @@ All code developed is publicly accessible in our GitHub repository:
 
 % What is the architecture of the infrastructure deployed?
 
-...
+To provide the Pretix Ticketing Software to the public, it was required to set up an infrastructure containing their Django-based web application, an instance 
+of a Web Server Gateway Interface (WSGI) hosting the application and of a reverse-proxy for the web application deployment in production mode, as well as a
+database management system (DBMS) (where PostgreSQL was used) for handling disk storage and a caching server (where Redis was chosen) for in-memory storage and 
+asynchronous queuing of tasks.
+
+Our strategy is thoroughly described in the previous report, which already considered minimum redundancy to ensure availability.
+It is achieved through the usage of Docker to isolate each component for greater control and easier configuration, and Docker Swarm for the orchestration of 
+the entire infrastructure.
+Nevertheless, as it was a still primitive solution, naturally several upgrades were applied, mostly internally to each container.
+The latest architecture is visually presented in Figure \ref{fig:InfrastructureArchitecture}.
+This solution considers quality attributes whose assurance is described in the sections below.
+
+\begin{figure}[H]
+ \centering
+ \begin{minipage}{.85\textwidth}
+   \centering
+   \includegraphics[width=\linewidth]{diagrams/InfrastructureArchitecture.png}
+ \end{minipage}%
+ \caption{Infrastructure architecture diagram deployed in Docker Swarm.}
+ \label{fig:InfrastructureArchitecture}
+\end{figure}
 
 \subsection{Load Balancing} \label{architecture.loadbalancing} %%%%%%%%%%%%%
 
 % How is load balancing assured?
 
-...
+The knowledge gathered so far regarding the operation of Pretix affirms that user activity peaks are to be expected when in production.
+This has many implications and requires the implementation of mechanisms that maximize the infrastructure's efficiency.
+
+With this in mind, we have come up with mechanisms for load balancing based on proxy servers.
+These servers, when strategically placed, act as intermediaries for requests seeking resources from the system itself.
+This not only reduces the complexity of requests made to our services, but also provides additional benefits with regards to security and load balancing,
+as they allow a controlled and intelligent distribution of requests among components.
+
+An NGinX proxy was installed between the end users and the web application.
+With the help of Docker Swarm, replicas of both the proxy and the web application were deployed.
+This is transparent for the user and it works as if he/she is sending requests to one single access point.
+
+The storage clusters also resort to proxies.
+For the PostgreSQL server cluster, we adopted Pgpool-II.
+As our database is replicated in master/slave mode, Pgpool is able to take advantage of the replication feature in order to reduce the load on each PostgreSQL server
+by evenly distributing queries among available servers and consequently improving the overall throughput.
+Pgpool provides other useful features such as connection pooling, where it maintains established connections to the servers and reuses them whenever a new 
+connection with the same properties comes in, and automated fail over, mentioned in greater detail in section \ref{management.automation}.
+
+For the Redis server cluster, the adopted solution was the well-known HAProxy.
+The instances installed spread requests evenly across the Redis cluster.
+Here, a master/slave mode was also used, meaning that the proxies interact with master instances that then delegate work among slaves.
+
+Load tests executed during development proved that such additions had a significant impact on the performance of the system.
+The usage of networks, seen in Figure \ref{fig:InfrastructureArchitecture}, where the proxies mentioned above are inserted help orchestrating and logically 
+grouping components.
 
 \subsection{Redundancy} \label{architecture.redundancy} %%%%%%%%%%%%%%%%%%%%
 
 % How is redundancy assured?
 
-...
+In order for us to provide Pretix, it is only required to maintain one instance of each component running.
+However, this is highly unadvisable as it susceptible to failure from any point, i.e. if any of the system components fails, the entire system goes down.
+This is referred to as a redundancy measure of N.
+
+Ensuring actual redundancy of a system requires at least a measure of N+1, where each component can be replaced by another if required.
+In most cases this is achievable through the replication feature of Docker Swarm.
+Pretix's stack has K replicas of NGinX, of the Pretix web application, of Pgpool proxy and of HAProxy, where K can be defined on deployment with a value greater than 2.
+
+Redundancy was also the reason why a master/slave mode was adopted on both clusters.
+By instantiating 1 master and K slaves, it is possible to fulfill the requirements implicit to N+1 since if any slave fails the others can replace it and if the 
+master fails a slave is elected the new master.
+Fortunately, for the PostgreSQL cluster this reelection process is done automatically, but for the Redis cluster the use of sentinels is required: sentinels 
+observe the behavior of masters and slaves, detect failures and reassign roles when needed; here we insist on providing N+1 redundancy by having multiple 
+instances of sentinels as well.
 
 \subsection{Scalability} \label{architecture.scalability} %%%%%%%%%%%%%%%%%%%%%
 
 % How is horizontal scalability assured?
 
-...
+Any project intended to be successful must consider the scalability of the product in the future.
+Ours is no exception since, if the ticketing platform becomes popular, the infrastructure must be prepared to respond to greater loads of income traffic.
+
+There were 2 means to ensure scalability: vertical or horizontal.
+As we had access to limited computational resources and adding more physical RAM or CPUs was not an option, the only alternative left was to support horizontal scaling.
+
+The idea here is to make possible the deployment of new replicas of any component and integrate them to the existing infrastructure without significant negative 
+impact on insertion and in a completely transparent way to the users.
+This is exactly what we achieved.
+Additionally, each component identifies itself to the monitoring server on initialization so that the data related to what is being managed is constantly up-to-date.
+
+Scaling a portion of the stack can be done both manually or in an automated way.
+By default we support manual scaling, but we found it was logical to implement automated mechanisms to scale up or down according to the online users and the 
+resources used.
+This was achieved through the monitoring of meaningful metrics collected from each container instance, as we present in section \ref{management.automation}.
 
 \newpage
 \section{Infrastructure Management} \label{management} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Service Level Agreements} \label{management.sla} %%%%%%%%%%%%%%%
+\subsection{Service Level Agreement} \label{management.sla} %%%%%%%%%%%%%%%
 
 % What are the SLAs defined?
+
+As service providers, we are supposed to fulfill a commitment with our clients, whether it is formally defined or not.
+Obviously it is a good practice to elaborate an agreement where particular aspects of the service are agreed between the service provider and the service user -
+this is called a Service Level Agreement (SLA).
+We describe ours in this section. 
+
+Considering the scope of our project, we've defined the following commitment key points:
+\vspace{-10pt}
+\begin{itemize}[noitemsep]
+  \item Pretix is to be provided through web browsers, by accessing a particular address, and it will only be accessible to those within the university's virtual private network.
+  \item Its usage is fully dependent on the usability of the Pretix service itself and no complexity should be added by the infrastructure we provide with regards to this.
+  \item We are responsible for providing free access to the ticketing platform through our servers and keeping data integrity even when the service is unavailable
+  \item The installations hosting our deployment belong to a third party (the university) and thus we are not accountable for possible availability issues related to networking and machine up time.
+        Nevertheless, if this is not considered, we ensure an availability of 100\% under normal circumstances and of 70\% for high activity peaks \footnote{Over 50 requests per minute.}, with a maximum response time of 50 seconds for ticket purchasing requests. 
+  \item No support is guaranteed for issues about features related to the internal implementation of the ticketing software.
+\end{itemize}
+\vspace{-10pt}
+
+It is worth mentioning that our analysis to the (free version of the) Pretix product showed that the software had strong limitations on maximum load capacity 
+and response time that, according to the authors, could not be solved through horizontal scaling.
+
+Focusing on the infrastructure itself and the computational resources, we have defined a list of Service Level Objects (SLO) - the metrics to be observed - 
+representative of the stack's state, and a list of Service Level Indications (SLI) - the thresholds or functions applied to the metric values - that will
+help us react to situations where the SLA compliance is threatened.
+These SLOs revolve around: memory capacity, operation latency, data transfer throughput, availability percentage, recovery time and reliability.
 
 ...
 
@@ -177,7 +264,7 @@ All code developed is publicly accessible in our GitHub repository:
 \subsection{Automation} \label{management.automation} %%%%%%%%%%%%%%%%%%%%%
 
 % How is the provisioning of new elements automated?
-% How is the infrastructure fault tolerant?
+% How is the infrastructure fault tolerant? (pgpool automated failover, redis sentinels, SLA violation alarm responses)
 
 ...
 
@@ -216,7 +303,7 @@ code explaining snippets considered of greater complexity/importance.
 
 % who did what?
 
-Regarding the work distribution amongst developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according 
+Regarding the work distribution among developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according 
 to a predefined plan. 
 The cluster strategy and respective details were decided in conjunction, as well as the key objectives and tasks to be achieved before the final delivery deadline.
 
