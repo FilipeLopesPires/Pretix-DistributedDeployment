@@ -69,20 +69,20 @@ scrape_configs:
       - files:
         - 'exporters/nginx_targets.json'
 
-  - job_name: 'pga'
+  - job_name: 'pg0'
     file_sd_configs:
       - files:
-        - 'exporters/pga_targets.json'
+        - 'exporters/pg0_targets.json'
 
-  - job_name: 'pgb'
+  - job_name: 'pg1'
     file_sd_configs:
       - files:
-        - 'exporters/pgb_targets.json'
+        - 'exporters/pg1_targets.json'
 
-  - job_name: 'pgc'
+  - job_name: 'pg2'
     file_sd_configs:
       - files:
-        - 'exporters/pgc_targets.json'
+        - 'exporters/pg2_targets.json'
 
   
 

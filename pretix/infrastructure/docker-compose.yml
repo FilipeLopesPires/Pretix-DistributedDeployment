@@ -8,92 +8,92 @@
 
 version: '3.3'
 services:
-  # pg-0:
-  #   #image: bitnami/postgresql-repmgr:11.7.0
-  #   image: 10.2.0.1:5000/pretixpostgres
-  #   environment:
-  #     - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-  #     - POSTGRESQL_USERNAME=customuser
-  #     - POSTGRESQL_PASSWORD=custompassword
-  #     - POSTGRESQL_DATABASE=customdatabase
-  #     - REPMGR_PASSWORD=repmgrpassword
-  #     - REPMGR_PRIMARY_HOST=pg-0
-  #     - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
-  #     - REPMGR_NODE_NAME=pg-0
-  #     - REPMGR_NODE_NETWORK_NAME=pg-0
-  #     - NAME={{.Task.Name}}
-  #   volumes:
-  #     - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
-  #   networks:
-  #     - pretixPgNetwork
-  #   # logging:
-  #   #   driver: syslog
-  #   #   options:
-  #   #     syslog-address: "udp://10.5.0.108:5000"
-  #   #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  #   ports:
-  #     - 7258:9187
+  pg-0:
+    #image: bitnami/postgresql-repmgr:11.7.0
+    image: 10.2.0.1:5000/pretixpostgres
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-0
+      - REPMGR_NODE_NETWORK_NAME=pg-0
+      - NAME={{.Task.Name}}
+    volumes:
+      - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: "udp://10.5.0.108:5000"
+    #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - 7258:9187
 
-  # pg-1:
-  #   #image: bitnami/postgresql-repmgr:11.7.0
-  #   image: 10.2.0.1:5000/pretixpostgres
-  #   environment:
-  #     - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-  #     - POSTGRESQL_USERNAME=customuser
-  #     - POSTGRESQL_PASSWORD=custompassword
-  #     - POSTGRESQL_DATABASE=customdatabase
-  #     - REPMGR_PASSWORD=repmgrpassword
-  #     - REPMGR_PRIMARY_HOST=pg-0
-  #     - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
-  #     - REPMGR_NODE_NAME=pg-1
-  #     - REPMGR_NODE_NETWORK_NAME=pg-1
-  #     - NAME={{.Task.Name}}
-  #   volumes:
-  #     - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
-  #   networks:
-  #     - pretixPgNetwork
-  #   # logging:
-  #   #   driver: syslog
-  #   #   options:
-  #   #     syslog-address: "udp://10.5.0.108:5000"
-  #   #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  #   ports:
-  #     - 7257:9187
+  pg-1:
+    #image: bitnami/postgresql-repmgr:11.7.0
+    image: 10.2.0.1:5000/pretixpostgres
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=pg-1
+      - NAME={{.Task.Name}}
+    volumes:
+      - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: "udp://10.5.0.108:5000"
+    #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - 7257:9187
 
-  # pg-2:
-  #   #image: bitnami/postgresql-repmgr:11.7.0
-  #   image: 10.2.0.1:5000/pretixpostgres
-  #   environment:
-  #     - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-  #     - POSTGRESQL_USERNAME=customuser
-  #     - POSTGRESQL_PASSWORD=custompassword
-  #     - POSTGRESQL_DATABASE=customdatabase
-  #     - REPMGR_PASSWORD=repmgrpassword
-  #     - REPMGR_PRIMARY_HOST=pg-0
-  #     - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
-  #     - REPMGR_NODE_NAME=pg-2
-  #     - REPMGR_NODE_NETWORK_NAME=pg-2
-  #     - NAME={{.Task.Name}}
-  #   volumes:
-  #     - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
-  #   networks:
-  #     - pretixPgNetwork
-  #   # logging:
-  #   #   driver: syslog
-  #   #   options:
-  #   #     syslog-address: "udp://10.5.0.108:5000"
-  #   #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  #   ports:
-  #     - 7256:9187
+  pg-2:
+    #image: bitnami/postgresql-repmgr:11.7.0
+    image: 10.2.0.1:5000/pretixpostgres
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=pg-2
+      - NAME={{.Task.Name}}
+    volumes:
+      - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
+    networks:
+      - pretixPgNetwork
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: "udp://10.5.0.108:5000"
+    #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - 7256:9187
 
   pgpool:
     image: bitnami/pgpool:4.1.1
@@ -109,6 +109,7 @@ services:
       - PGPOOL_ADMIN_USERNAME=admin
       - PGPOOL_ADMIN_PASSWORD=adminpassword
       - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - NAME={{.Task.Name}}
     healthcheck:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
     networks:
@@ -211,56 +212,56 @@ services:
     ports:
       - 7252:9121
         
-  # web:
-  #   image: 10.2.0.1:5000/pretixmypretix
-  #   volumes:
-  #     - /nfs/pretix/web/pretix:/etc/pretix:rw
-  #     - /nfs/pretix/web/data:/data:rw
-  #   environment:
-  #     - POSTGRESIP=pgpool
-  #     - REDISIP=redisproxy
-  #     - NAME={{.Task.Name}}
-  #   ports:
-  #     - 7201:80
-  #     - 7251:9121
-  #   networks:
-  #     - pretixOut
-  #     - pretixPgNetwork
-  #     - pretixRedisNetwork
-  #   secrets:
-  #     - source: pretixConf
-  #       target: /etc/pretix/pretix.cfg
-  #   # logging:
-  #   #   driver: syslog
-  #   #   options:
-  #   #     syslog-address: "udp://10.5.0.108:5000"
-  #   #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-  #   deploy:
-  #     replicas: 6
-  #     restart_policy:
-  #       condition: on-failure
+  web:
+    image: 10.2.0.1:5000/pretixmypretix
+    volumes:
+      - /nfs/pretix/web/pretix:/etc/pretix:rw
+      - /nfs/pretix/web/data:/data:rw
+    environment:
+      - POSTGRESIP=pgpool
+      - REDISIP=redisproxy
+      - NAME={{.Task.Name}}
+    ports:
+      - 7201:80
+      - 7251:9121
+    networks:
+      - pretixOut
+      - pretixPgNetwork
+      - pretixRedisNetwork
+    secrets:
+      - source: pretixConf
+        target: /etc/pretix/pretix.cfg
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: "udp://10.5.0.108:5000"
+    #     tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+    deploy:
+      replicas: 6
+      restart_policy:
+        condition: on-failure
 
-  # nginx: 
-  #   image: 10.2.0.1:5000/pretixnginx
-  #   secrets:
-  #     - source: pretixNginxConf
-  #       target: /etc/nginx/nginx.conf
-  #   ports:
-  #     - 7200:80
-  #     - 7250:9913
-  #   networks:
-  #     - pretixOut
-  #   environment:
-  #     - NAME={{.Task.Name}}
-  #   # logging:
-  #   #   driver: syslog
-  #   #   options:
-  #   #     syslog-address: "udp://10.5.0.108:5000"
-  #   #     tag: "nginx"
-  #   deploy:
-  #     replicas: 3
-  #     restart_policy:
-  #       condition: on-failure
+  nginx: 
+    image: 10.2.0.1:5000/pretixnginx
+    secrets:
+      - source: pretixNginxConf
+        target: /etc/nginx/nginx.conf
+    ports:
+      - 7200:80
+      - 7250:9913
+    networks:
+      - pretixOut
+    environment:
+      - NAME={{.Task.Name}}
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: "udp://10.5.0.108:5000"
+    #     tag: "nginx"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
 
 secrets:
   pretixConf:
