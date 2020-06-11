@@ -17,7 +17,7 @@
 sed -i 's,{{REDIS_MASTER}},'"${REDIS_MASTER}"',g' /etc/redis/redis.conf
 # sed -i 's,{{REPLICA_CONTAINER_IP}},'"${DOCKER_CONTAINER_IP}"',g' /etc/redis/redis.conf
 
-wget -qO- https://github.com/oliver006/redis_exporter/releases/download/v1.6.1/redis_exporter-v1.6.1.linux-amd64.tar.gz | tar xvz redis_exporter-v1.6.1.linux-amd64 && ./redis_exporter-v1.6.1.linux-amd64/redis_exporter -web.listen-address ":9121" &
+wget -qO- https://github.com/oliver006/redis_exporter/releases/download/v1.6.1/redis_exporter-v1.6.1.linux-amd64.tar.gz | tar xz redis_exporter-v1.6.1.linux-amd64 && ./redis_exporter-v1.6.1.linux-amd64/redis_exporter -web.listen-address ":9121" &
 
 curl -f -s -H "Content-Type: application/json" -d "{\"service\":\"$NAME\"}" 10.5.0.108:9999/service &
 
