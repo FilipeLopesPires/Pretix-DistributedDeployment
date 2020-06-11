@@ -120,48 +120,48 @@ services:
   #     restart_policy:
   #       condition: on-failure
 
-  pgpool:
-    image: postgres:11-alpine
-    ports:
-      - 7232:5432
-    environment:
-      - NAME={{.Task.Name}}
-      - POSTGRES_DB=customdatabase
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=adminpassword
-    volumes:
-      - /nfs/pretix/postgres/master:/var/lib/postgresql:rw
-    networks:
-      - pretixPgNetwork
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-
-  # redisproxy:
-  #   image: 10.2.0.1:5000/pretixredisproxy
+  # pgpool:
+  #   image: postgres:11-alpine
   #   ports:
-  #     - 7279:6379
-  #     - 7255:9101
+  #     - 7232:5432
   #   environment:
-  #     - ADMIN_USERNAME=admin
-  #     - ADMIN_PASSWORD=password
-  #     - REDIS_HOSTS=redismaster, redisslave
   #     - NAME={{.Task.Name}}
+  #     - POSTGRES_DB=customdatabase
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=adminpassword
+  #   volumes:
+  #     - /nfs/pretix/postgres/master:/var/lib/postgresql:rw
   #   networks:
-  #     - pretixRedisNetwork
+  #     - pretixPgNetwork
   #   # logging:
   #   #   driver: syslog
   #   #   options:
   #   #     syslog-address: "udp://10.5.0.108:5000"
   #   deploy:
-  #     replicas: 3
+  #     replicas: 2
   #     restart_policy:
   #       condition: on-failure
+
+  redisproxy:
+    image: 10.2.0.1:5000/pretixredisproxy
+    ports:
+      - 7279:6379
+      - 7255:9101
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=password
+      - REDIS_HOSTS=redismaster, redisslave
+      - NAME={{.Task.Name}}
+    networks:
+      - pretixRedisNetwork
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: "udp://10.5.0.108:5000"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
 
   # redismaster:
   #   image: 10.2.0.1:5000/pretixredismaster
