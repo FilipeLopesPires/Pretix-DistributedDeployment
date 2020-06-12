@@ -6,7 +6,9 @@
 \BOOKMARK [1][-]{section.2}{Infrastructure Management}{}% 6
 \BOOKMARK [2][-]{subsection.2.1}{Service Level Agreement}{section.2}% 7
 \BOOKMARK [2][-]{subsection.2.2}{Monitoring}{section.2}% 8
-\BOOKMARK [2][-]{subsection.2.3}{Automation}{section.2}% 9
-\BOOKMARK [1][-]{section.3}{Additional Remarks}{}% 10
-\BOOKMARK [2][-]{subsection.3.1}{Swarm Stability}{section.3}% 11
-\BOOKMARK [2][-]{subsection.3.2}{Assignment Contributions}{section.3}% 12
+\BOOKMARK [3][-]{subsubsection.2.2.1}{Log Collection}{subsection.2.2}% 9
+\BOOKMARK [3][-]{subsubsection.2.2.2}{Metric Collection}{subsection.2.2}% 10
+\BOOKMARK [2][-]{subsection.2.3}{Alerts and Automation}{section.2}% 11
+\BOOKMARK [1][-]{section.3}{Additional Remarks}{}% 12
+\BOOKMARK [2][-]{subsection.3.1}{Swarm Stability}{section.3}% 13
+\BOOKMARK [2][-]{subsection.3.2}{Assignment Contributions}{section.3}% 14

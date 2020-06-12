@@ -49,16 +49,16 @@ Computational Infrastructures Management\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{document} 
+\begin{document}
 
 \baselineskip18pt
 
-\maketitle 
+\maketitle
 
 \section*{Introduction} \label{introduction} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This report aims to describe the work developed for the final phase of the practical assignment of the discipline of Computational Infrastructures 
-Management \cite{assign} from the Msc. degree in Informatics Engineering of the University of Aveiro at the Department of Electronics, Telecommunications and 
+This report aims to describe the work developed for the final phase of the practical assignment of the discipline of Computational Infrastructures
+Management \cite{assign} from the Msc. degree in Informatics Engineering of the University of Aveiro at the Department of Electronics, Telecommunications and
 Informatics.
 It is assumed that the reader has knowledge about the previous report, and it is here included:
 the characterization of the service level agreements for each service;
@@ -67,7 +67,7 @@ the redundancy strategy;
 the listing of metrics and computational resources monitored, along with the respective defined alarms;
 and other relevant aspects such as horizontal scalability and component fault tolerance.
 
-The service provided is Pretix, an online shop, box office and ticket outlet already successfully used by other service providers for conferences, festivals, 
+The service provided is Pretix, an online shop, box office and ticket outlet already successfully used by other service providers for conferences, festivals,
 exhibitions, workshops and more.
 The previously delivered work focused on the product presentation, distributed installation, and resource and performance analysis.
 All code developed is publicly accessible in our GitHub repository:
@@ -133,26 +133,26 @@ All code developed is publicly accessible in our GitHub repository:
 
 % What is the architecture of the infrastructure deployed?
 
-To provide the Pretix Ticketing Software to the public, it was required to set up an infrastructure containing their Django-based web application, an instance 
+To provide the Pretix Ticketing Software to the public, it was required to set up an infrastructure containing their Django-based web application, an instance
 of a Web Server Gateway Interface (WSGI) hosting the application and of a reverse-proxy for the web application deployment in production mode, as well as a
-database management system (DBMS) (where PostgreSQL was used) for handling disk storage and a caching server (where Redis was chosen) for in-memory storage and 
+database management system (DBMS) (where PostgreSQL was used) for handling disk storage and a caching server (where Redis was chosen) for in-memory storage and
 asynchronous queuing of tasks.
 
 Our strategy is thoroughly described in the previous report, which already considered minimum redundancy to ensure availability.
-It is achieved through the usage of Docker to isolate each component for greater control and easier configuration, and Docker Swarm for the orchestration of 
+It is achieved through the usage of Docker to isolate each component for greater control and easier configuration, and Docker Swarm for the orchestration of
 the entire infrastructure.
 Nevertheless, as it was a still primitive solution, naturally several upgrades were applied, mostly internally to each container.
 The latest architecture is visually presented in Figure \ref{fig:InfrastructureArchitecture}.
 This solution considers quality attributes whose assurance is described in the sections below.
 
 \begin{figure}[H]
- \centering
- \begin{minipage}{.85\textwidth}
-   \centering
-   \includegraphics[width=\linewidth]{diagrams/InfrastructureArchitecture.png}
- \end{minipage}%
- \caption{Infrastructure architecture diagram deployed in Docker Swarm.}
- \label{fig:InfrastructureArchitecture}
+  \centering
+  \begin{minipage}{.85\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{diagrams/InfrastructureArchitecture.png}
+  \end{minipage}%
+  \caption{Infrastructure architecture diagram deployed in Docker Swarm.}
+  \label{fig:InfrastructureArchitecture}
 \end{figure}
 
 \subsection{Load Balancing} \label{architecture.loadbalancing} %%%%%%%%%%%%%
@@ -175,7 +175,7 @@ The storage clusters also resort to proxies.
 For the PostgreSQL server cluster, we adopted Pgpool-II.
 As our database is replicated in master/slave mode, Pgpool is able to take advantage of the replication feature in order to reduce the load on each PostgreSQL server
 by evenly distributing queries among available servers and consequently improving the overall throughput.
-Pgpool provides other useful features such as connection pooling, where it maintains established connections to the servers and reuses them whenever a new 
+Pgpool provides other useful features such as connection pooling, where it maintains established connections to the servers and reuses them whenever a new
 connection with the same properties comes in, and automated fail over, mentioned in greater detail in section \ref{management.automation}.
 
 For the Redis server cluster, the adopted solution was the well-known HAProxy.
@@ -183,7 +183,7 @@ The instances installed spread requests evenly across the Redis cluster.
 Here, a master/slave mode was also used, meaning that the proxies interact with master instances that then delegate work among slaves.
 
 Load tests executed during development proved that such additions had a significant impact on the performance of the system.
-The usage of networks, seen in Figure \ref{fig:InfrastructureArchitecture}, where the proxies mentioned above are inserted help orchestrating and logically 
+The usage of networks, seen in Figure \ref{fig:InfrastructureArchitecture}, where the proxies mentioned above are inserted help orchestrating and logically
 grouping components.
 
 \subsection{Redundancy} \label{architecture.redundancy} %%%%%%%%%%%%%%%%%%%%
@@ -199,10 +199,10 @@ In most cases this is achievable through the replication feature of Docker Swarm
 Pretix's stack has K replicas of NGinX, of the Pretix web application, of Pgpool proxy and of HAProxy, where K can be defined on deployment with a value greater than 2.
 
 Redundancy was also the reason why a master/slave mode was adopted on both clusters.
-By instantiating 1 master and K slaves, it is possible to fulfill the requirements implicit to N+1 since if any slave fails the others can replace it and if the 
+By instantiating 1 master and K slaves, it is possible to fulfill the requirements implicit to N+1 since if any slave fails the others can replace it and if the
 master fails a slave is elected the new master.
-Fortunately, for the PostgreSQL cluster this reelection process is done automatically, but for the Redis cluster the use of sentinels is required: sentinels 
-observe the behavior of masters and slaves, detect failures and reassign roles when needed; here we insist on providing N+1 redundancy by having multiple 
+Fortunately, for the PostgreSQL cluster this reelection process is done automatically, but for the Redis cluster the use of sentinels is required: sentinels
+observe the behavior of masters and slaves, detect failures and reassign roles when needed; here we insist on providing N+1 redundancy by having multiple
 instances of sentinels as well.
 
 \subsection{Scalability} \label{architecture.scalability} %%%%%%%%%%%%%%%%%%%%%
@@ -215,13 +215,13 @@ Ours is no exception since, if the ticketing platform becomes popular, the infra
 There were 2 means to ensure scalability: vertical or horizontal.
 As we had access to limited computational resources and adding more physical RAM or CPUs was not an option, the only alternative left was to support horizontal scaling.
 
-The idea here is to make possible the deployment of new replicas of any component and integrate them to the existing infrastructure without significant negative 
+The idea here is to make possible the deployment of new replicas of any component and integrate them to the existing infrastructure without significant negative
 impact on insertion and in a completely transparent way to the users.
 This is exactly what we achieved.
 Additionally, each component identifies itself to the monitoring server on initialization so that the data related to what is being managed is constantly up-to-date.
 
 Scaling a portion of the stack can be done both manually or in an automated way.
-By default we support manual scaling, but we found it was logical to implement automated mechanisms to scale up or down according to the online users and the 
+By default we support manual scaling, but we found it was logical to implement automated mechanisms to scale up or down according to the online users and the
 resources used.
 This was achieved through the monitoring of meaningful metrics collected from each container instance, as we present in section \ref{management.automation}.
 
@@ -235,7 +235,7 @@ This was achieved through the monitoring of meaningful metrics collected from ea
 As service providers, we are supposed to fulfill a commitment with our clients, whether it is formally defined or not.
 Obviously it is a good practice to elaborate an agreement where particular aspects of the service are agreed between the service provider and the service user -
 this is called a Service Level Agreement (SLA).
-We describe ours in this section. 
+We describe ours in this section.
 
 Considering the scope of our project, we've defined the following commitment key points:
 \vspace{-10pt}
@@ -244,15 +244,15 @@ Considering the scope of our project, we've defined the following commitment key
   \item Its usage is fully dependent on the usability of the Pretix service itself and no complexity should be added by the infrastructure we provide with regards to this.
   \item We are responsible for providing free access to the ticketing platform through our servers and keeping data integrity even when the service is unavailable
   \item The installations hosting our deployment belong to a third party (the university) and thus we are not accountable for possible availability issues related to networking and machine up time.
-        Nevertheless, if this is not considered, we ensure an availability of 100\% under normal circumstances and of 70\% for high activity peaks \footnote{Over 50 requests per minute.}, with a maximum response time of 50 seconds for ticket purchasing requests. 
+        Nevertheless, if this is not considered, we ensure an availability of 100\% under normal circumstances and of 70\% for high activity peaks \footnote{Over 50 requests per minute.}, with a maximum response time of 50 seconds for ticket purchasing requests.
   \item No support is guaranteed for issues about features related to the internal implementation of the ticketing software.
 \end{itemize}
 \vspace{-10pt}
 
-It is worth mentioning that our analysis to the (free version of the) Pretix product showed that the software had strong limitations on maximum load capacity 
+It is worth mentioning that our analysis to the (free version of the) Pretix product showed that the software had strong limitations on maximum load capacity
 and response time that, according to the authors, could not be solved through horizontal scaling.
 
-Focusing on the infrastructure itself and the computational resources, we have defined a list of Service Level Objects (SLO) - the metrics to be observed - 
+Focusing on the infrastructure itself and the computational resources, we have defined a list of Service Level Objects (SLO) - the metrics to be observed -
 representative of the stack's state, and a list of Service Level Indications (SLI) - the thresholds or functions applied to the metric values - that will
 help us react to situations where the SLA compliance is threatened.
 These SLOs revolve around: memory capacity, operation latency, data transfer throughput, availability percentage, recovery time and reliability.
@@ -294,7 +294,6 @@ These SLOs revolve around: memory capacity, operation latency, data transfer thr
 
 % How is the infrastructure monitored? 
 % SNMP, logs, metrics exporters
-% SLA violation alarms
 
 Understanding the state of the infrastructure and components is essential for ensuring the correct functioning and stability of the service.
 Information about the health and performance of deployments not only helps us react to issues, it also gives security to make changes with confidence. 
@@ -306,13 +305,15 @@ undesired events occur or when the maximum capacity of some resource is almost r
 Our monitoring system is hosted on ............... % explain proxmox etc etc
 It consists of a virtual machine (VM), running ............. % mention OS, resource (CPUs, RAM, disk, etc), etc
 
-% Metrics & Logs
-This system collects a set of metrics from each instance of the Pretix stack .............
+\subsubsection{Log Collection}
 
 ...
 
-\subsection{Automation} \label{management.automation} %%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Metric Collection}
 
+\subsection{Alerts and Automation} \label{management.automation} %%%%%%%%%%%%%%%%%%%%%
+
+% SLA violation alarms
 % How is the provisioning of new elements automated?
 % How is the infrastructure fault tolerant? (pgpool automated failover, redis sentinels, SLA violation alarm responses)
 
@@ -331,9 +332,20 @@ This system collects a set of metrics from each instance of the Pretix stack ...
 
 % who did what?
 
+<<<<<<< HEAD
 Due to external issues that prevented physical proximity among students and professors, a confined approach had to be adopted during this second development phase.
 Nevertheless, the close-contact strategy was kept as this project required a broad perspective on the infrastructure and the tasks to be implemented by both team members.
 Regarding the work distribution among developers, tasks were assigned to each according to a predefined plan and a common working schedule was applied. 
+=======
+<<<<<<< HEAD
+Regarding the work distribution amongst developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according
+to a predefined plan.
+=======
+Regarding the work distribution among developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according
+to a predefined plan.
+>>>>>>> 733311d3d5d304f0545f0cf5008b0bde8fced17e
+The cluster strategy and respective details were decided in conjunction, as well as the key objectives and tasks to be achieved before the final delivery deadline.
+>>>>>>> 7a7ddb2fed714a84a50822704febe51539a1dcee
 
 The technology-related decisions were first made in conjunction.
 Then, Filipe set up the monitoring VM to gather the data from the stack while João began to work on the mechanism to collect the logs from each container.
@@ -342,7 +354,12 @@ The container identification mechanism of each instance to the monitoring system
 At this stage, both operators worked on defining the SLA and João designed the monitoring dashboards.
 Finally, the alarms and automated response mechanisms were implemented.
 It is needless to say that bug and error solving was made along the development phase by both developers any time it was required.
+<<<<<<< HEAD
 Once a stable deployment fulfilling all predefined requirements was completed, this report became our primary concern, with both contributing equally.
+=======
+Once performance benchmarking and bottleneck identification were completed, this report and the code documentation became our primary concern, with both
+contributing equally.
+>>>>>>> 7a7ddb2fed714a84a50822704febe51539a1dcee
 
 \newpage
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -354,123 +371,123 @@ Once a stable deployment fulfilling all predefined requirements was completed, t
   \bibliographystyle{Science}
 
   \bibitem{assign}
-    J. P. Barraca,
-    \textit{GIC - Report no.2: Simple Product Operation},
-    University of Aveiro,
-    2019/20.
-    \vspace{-10pt}
+  J. P. Barraca,
+  \textit{GIC - Report no.2: Simple Product Operation},
+  University of Aveiro,
+  2019/20.
+  \vspace{-10pt}
 
   \bibitem{pretix}
-    \textit{About Pretix},
-    \url{https://pretix.eu/about/en/}.
-    Pretix.eu,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{About Pretix},
+  \url{https://pretix.eu/about/en/}.
+  Pretix.eu,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{rami.io}
-    \textit{Welcome to Rami.io},
-    \url{https://rami.io/}.
-    Rami.io,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Welcome to Rami.io},
+  \url{https://rami.io/}.
+  Rami.io,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{pretixgit}
-    \textit{Pretix Code Repository},
-    \url{https://github.com/pretix/pretix}.
-    GitHub, Inc.,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Pretix Code Repository},
+  \url{https://github.com/pretix/pretix}.
+  GitHub, Inc.,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{pretixdoc}
-    \textit{Welcome to pretix' documentation!},
-    \url{https://docs.pretix.eu/en/latest/}.
-    Pretix.eu,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Welcome to pretix' documentation!},
+  \url{https://docs.pretix.eu/en/latest/}.
+  Pretix.eu,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{docker}
-    \textit{Docker Homepage},
-    \url{https://www.docker.com/}.
-    Docker Inc.,
-    retrieved in April 2020.
-    \vspace{-26pt}
+  \textit{Docker Homepage},
+  \url{https://www.docker.com/}.
+  Docker Inc.,
+  retrieved in April 2020.
+  \vspace{-26pt}
 
   \bibitem{pretix_img}
-    \textit{pretix/standalone},
-    \url{https://hub.docker.com/r/pretix/standalone}.
-    pretix,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{pretix/standalone},
+  \url{https://hub.docker.com/r/pretix/standalone}.
+  pretix,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{django}
-    \textit{Meet Django},
-    \url{https://www.djangoproject.com/}.
-    Django Software Foundation and individual contributors,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Meet Django},
+  \url{https://www.djangoproject.com/}.
+  Django Software Foundation and individual contributors,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{gunicorn}
-    \textit{Gunicorn Homepage},
-    \url{https://gunicorn.org/}.
-    Gunicorn.org,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Gunicorn Homepage},
+  \url{https://gunicorn.org/}.
+  Gunicorn.org,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{nginx}
-    \textit{NGinX News},
-    \url{https://nginx.org/}.
-    NGinX.org,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{NGinX News},
+  \url{https://nginx.org/}.
+  NGinX.org,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{postgresql}
-    \textit{PostgreSQL: The World's Most Advanced Open Source Relational Database},
-    \url{https://www.postgresql.org/}.
-    The PostgreSQL Global Development Group,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{PostgreSQL: The World's Most Advanced Open Source Relational Database},
+  \url{https://www.postgresql.org/}.
+  The PostgreSQL Global Development Group,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{redis}
-    \textit{About Redis},
-    \url{https://redis.io/}.
-    Redis Labs,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{About Redis},
+  \url{https://redis.io/}.
+  Redis Labs,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{pgpool}
-    \textit{Welcome to Pgpool-II},
-    \url{https://www.pgpool.net/mediawiki/index.php/Main_Page}.
-    PgPool Global Development Group,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Welcome to Pgpool-II},
+  \url{https://www.pgpool.net/mediawiki/index.php/Main_Page}.
+  PgPool Global Development Group,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{haproxy}
-    \textit{HAProxy: The Reliable, High Performance TCP/HTTP Load Balancer},
-    \url{https://www.haproxy.org/}.
-    HAProxy.org,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{HAProxy: The Reliable, High Performance TCP/HTTP Load Balancer},
+  \url{https://www.haproxy.org/}.
+  HAProxy.org,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{locust}
-    \textit{Locust, an open source load testing tool},
-    \url{https://locust.io/}.
-    Locust.io,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{Locust, an open source load testing tool},
+  \url{https://locust.io/}.
+  Locust.io,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{selenium}
-    \textit{About Selenium},
-    \url{https://www.selenium.dev/about/}.
-    Software Freedom Conservancy,
-    retrieved in April 2020.
-    \vspace{-10pt}
+  \textit{About Selenium},
+  \url{https://www.selenium.dev/about/}.
+  Software Freedom Conservancy,
+  retrieved in April 2020.
+  \vspace{-10pt}
 
   \bibitem{ansible}
-    \textit{Ansible},
-    \url{https://www.ansible.com/}.
-    Red Hat,
-    retrieved in April 2020.
-    
+  \textit{Ansible},
+  \url{https://www.ansible.com/}.
+  Red Hat,
+  retrieved in April 2020.
+
 \end{thebibliography}
 
 \clearpage

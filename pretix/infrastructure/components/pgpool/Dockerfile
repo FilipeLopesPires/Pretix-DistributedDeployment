@@ -1,8 +1,8 @@
 FROM bitnami/pgpool:4
 USER root
 
-RUN apt-get update -q
-RUN apt-get install curl -y -q
+RUN apt-get update -qq
+RUN apt-get install curl -y -qq
 
 COPY ./entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh

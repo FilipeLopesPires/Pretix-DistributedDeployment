@@ -21,6 +21,7 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
+      - NAME={{.Task.Name}}
     volumes:
       - postgresmaster:/bitnami/postgresql:rw
     networks:
@@ -41,6 +42,7 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
+      - NAME={{.Task.Name}}
     volumes:
       - postgresslave1:/bitnami/postgresql:rw
     networks:
@@ -61,6 +63,7 @@ services:
       - REPMGR_PARTNER_NODES=pg-0,pg-1,pg-2
       - REPMGR_NODE_NAME=pg-2
       - REPMGR_NODE_NETWORK_NAME=pg-2
+      - NAME={{.Task.Name}}
     volumes:
       - postgresslave2:/bitnami/postgresql:rw
     networks:
@@ -83,6 +86,7 @@ services:
       - PGPOOL_ADMIN_USERNAME=admin
       - PGPOOL_ADMIN_PASSWORD=adminpassword
       - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - NAME={{.Task.Name}}
     healthcheck:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
       interval: 10s
@@ -97,6 +101,7 @@ services:
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=password
       - REDIS_HOSTS=redismaster, redisslave, redisslave2
+      - NAME={{.Task.Name}}
     networks:
       - pretixRedisNetwork
     ports:
@@ -106,6 +111,8 @@ services:
   redismaster:
     #image: redis:5.0.9-alpine
     build: ../components/redisMaster
+    environment:
+      - NAME={{.Task.Name}}
     volumes:
       - redis1:/data
     networks:
@@ -117,6 +124,7 @@ services:
     build: ../components/redisSlave
     environment:
       - REDIS_MASTER=redismaster
+      - NAME={{.Task.Name}}
     volumes:
       - redis2:/data
     networks:
@@ -128,6 +136,7 @@ services:
     build: ../components/redisSlave
     environment:
       - REDIS_MASTER=redismaster
+      - NAME={{.Task.Name}}
     volumes:
       - redis3:/data
     networks:
@@ -141,6 +150,7 @@ services:
       - MASTER_NAME=mymaster
       - QUORUM=1
       - MASTER=redismaster
+      - NAME={{.Task.Name}}
     volumes:
       - redis4:/data
     networks:
@@ -154,6 +164,7 @@ services:
       - MASTER_NAME=mymaster
       - QUORUM=1
       - MASTER=redismaster
+      - NAME={{.Task.Name}}
     volumes:
       - redis4:/data
     networks:
@@ -166,12 +177,16 @@ services:
     environment:
       - POSTGRESIP=pgpool
       - REDISIP=redisproxy
+      - NAME={{.Task.Name}}
     volumes:
       - pretixData1:/etc/pretix:rw
       - pretixData2:/data:rw
     secrets:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
+    depends_on:
+      - redisproxy
+      - pgpool
     ports:
       - 7201:80
     networks:
@@ -184,12 +199,16 @@ services:
     environment:
       - POSTGRESIP=pgpool
       - REDISIP=redisproxy
+      - NAME={{.Task.Name}}
     volumes:
       - pretixData1:/etc/pretix:rw
       - pretixData2:/data:rw
     secrets:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
+    depends_on:
+      - redisproxy
+      - pgpool
     ports:
       - 7202:80
     networks:
@@ -200,9 +219,13 @@ services:
   nginx: 
     #image: nginx:latest
     build: ../components/nginx
+    #image: sophos/nginx-vts-exporter:latest
     depends_on:
       - web
       - web2
+    environment:
+    # - NGINX_STATUS=http://localhost/status/format/json
+      - NAME={{.Task.Name}}
     secrets:
       - source: pretixNginxConf
         target: /etc/nginx/nginx.conf

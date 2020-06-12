@@ -1,0 +1,17 @@
+pretix
+pretix_view_requests_total{status_code="200",method="POST",url_name="control:events.add"} 1.0
+pretix_model_instances{model="pretixbase.event"} 1 
+pretix_model_instances{model="pretixbase.order"} 0
+pretix_model_instances{model="pretixbase.orderpayment"} 0
+
+pretix_view_duration_seconds_sum{status_code="200",method="POST",url_name="presale:event.checkout"} 3.220682475999638
+pretix_view_duration_seconds_bucket{status_code="200",method="POST",url_name="presale:event.checkout",le="7.5"} 1.0
+
+
+
+redis
+redis_uptime_in_seconds 540
+redis_memory_used_bytes 2.025648e+06
+redis_commands_processed_total 1115
+redis_connected_clients 2
+redis_connections_received_total 267

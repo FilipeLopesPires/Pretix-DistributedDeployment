@@ -4,6 +4,8 @@ import json
 import logging
 import docker
 
+logging.basicConfig(filename='/var/log/alertAndIp',level=logging.DEBUG)
+
 app = Flask(__name__)
 client=docker.from_env()
 
@@ -15,9 +17,9 @@ redissentinel={}
 redisproxy={}
 web={}
 nginx={}
-pga={}
-pgb={}
-pgc={}
+pg0={}
+pg1={}
+pg2={}
 
 # pg0:            -       7259
 # pg1:            -       7258
@@ -32,19 +34,17 @@ pgc={}
 
 def dockerScaleServiceUp(service):
     service=client.services.get("pretix_"+service)
-    if(service.scale(len(eval(service))+1)){
+    if(service.scale(len(eval(service))+1)):
         logging.warning("Service "+ service+" scaled up with success.")
-    }
 
 
 def dockerScaleServiceDown(service):
     service=client.services.get("pretix_"+service)
-    if(service.scale(len(eval(service))-1)){
+    if(service.scale(len(eval(service))-1)):
         logging.warning("Service "+ service+" scaled down with success.")
-    }
 
 def changeTargets(service):
-    file=open(service+"_targets.json", "w")
+    file=open("/etc/prometheus/exporters/"+service+"_targets.json", "w")
     file.write(json.dumps([{"targets":list(set(eval(service).values()))}]))
     file.close()
 

@@ -1,9 +1,9 @@
 FROM bitnami/postgresql-repmgr:11
 USER root
 
-RUN apt-get update -q
-RUN apt-get install wget -y -q
-RUN apt-get install curl -y -q
+RUN apt-get update -qq
+RUN apt-get install wget -y -qq
+RUN apt-get install curl -y -qq
 
 COPY ./get-exporter.sh /
 RUN chmod +x /get-exporter.sh
