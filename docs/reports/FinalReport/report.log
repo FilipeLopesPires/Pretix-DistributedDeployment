@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.11)  11 JUN 2020 19:24
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.11)  12 JUN 2020 16:56
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -297,46 +297,47 @@ LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <12> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 237.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 241.
+ [5]
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 261.
- [5] [6] [7] [8] [9]
-Underfull \hbox (badness 3780) in paragraph at lines 361--366
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 266.
+ [6] [7] [8] [9] [10] [11] [12]
+Underfull \hbox (badness 3780) in paragraph at lines 397--402
 []\OT1/ptm/m/it/12 Welcome to pretix' doc-u-men-ta-tion!\OT1/ptm/m/n/12 , []$\OT1/pcr/m/n/12 https : / / docs . pretix . eu / en / latest/$[]\OT1/ptm/m/n/12 .
  []
 
 
-Underfull \hbox (badness 2237) in paragraph at lines 375--380
+Underfull \hbox (badness 2237) in paragraph at lines 411--416
 []\OT1/ptm/m/it/12 pretix/standalone\OT1/ptm/m/n/12 , []$\OT1/pcr/m/n/12 https : / / hub . docker . com / r / pretix / standalone$[]\OT1/ptm/m/n/12 . pretix,
  []
 
 
-Underfull \hbox (badness 1701) in paragraph at lines 417--422
+Underfull \hbox (badness 1701) in paragraph at lines 453--458
 []\OT1/ptm/m/it/12 Welcome to Pgpool-II\OT1/ptm/m/n/12 , []$\OT1/pcr/m/n/12 https : / / www . pgpool . net / mediawiki / index . php /
  []
 
-[10]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 454.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 454.
+[13]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 490.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 490.
  (/home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 454.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 454.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 490.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 490.
 Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 84CCB2358A03F043EAEAE3A2AA9515FE;969.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 454.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 490.
  ) 
 Here is how much of TeX's memory you used:
- 6792 strings out of 492609
- 105260 string characters out of 6131462
- 199275 words of memory out of 5000000
+ 6795 strings out of 492609
+ 105281 string characters out of 6131462
+ 199280 words of memory out of 5000000
  10609 multiletter control sequences out of 15000+600000
  24383 words of font info for 49 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 36i,8n,39p,348b,321s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 36i,8n,39p,1273b,321s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on /home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/report.pdf (10 pages, 126923 bytes).
+Output written on /home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/report.pdf (13 pages, 133949 bytes).
 PDF statistics:
- 194 PDF objects out of 1000 (max. 8388607)
- 173 compressed objects within 2 object streams
- 48 named destinations out of 1000 (max. 500000)
+ 210 PDF objects out of 1000 (max. 8388607)
+ 186 compressed objects within 2 object streams
+ 51 named destinations out of 1000 (max. 500000)
  126 words of extra memory for PDF output out of 10000 (max. 10000000)
 
