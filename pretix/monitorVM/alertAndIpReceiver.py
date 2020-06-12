@@ -3,7 +3,9 @@ import yaml
 import json
 import logging
 import docker
+import os
 
+os.environ["DOCKER_HOST"]="tcp://10.2.0.1:2375"
 logging.basicConfig(filename='/var/log/alertAndIp',level=logging.DEBUG)
 
 app = Flask(__name__)
@@ -84,7 +86,7 @@ def receiveServiceIP():
 
 @app.route('/alert', methods=["POST"])
 def receiveAlert():
-    print(request.data)
+    logging.warning(request.data)
     return ''
 
 if __name__ == "__main__":
