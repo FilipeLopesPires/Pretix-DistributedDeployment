@@ -1,4 +1,4 @@
-FROM nginx:latest
+FROM nginx:1.18.0
 
 RUN apt-get update -q
 RUN apt-get install wget -y -q
@@ -11,4 +11,4 @@ EXPOSE 7200
 EXPOSE 9913
 
 ENTRYPOINT ["nginx-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+# CMD ["nginx", "-g", "daemon off;"]
