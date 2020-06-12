@@ -5,6 +5,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{enumitem}
 \usepackage{booktabs}
+\usepackage{siunitx}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PREAMBLE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -28,6 +29,11 @@
   {\setlength{\labelsep}{.5em}}
 }
 {\end{list}}
+
+\sisetup{
+  round-mode          = places, % Rounds numbers
+  round-precision     = 2, % to 2 places
+}
 
 \title{Final Report on:\\Pretix Redundant Operation} 
 
@@ -234,7 +240,7 @@ We describe ours in this section.
 Considering the scope of our project, we've defined the following commitment key points:
 \vspace{-10pt}
 \begin{itemize}[noitemsep]
-  \item Pretix is to be provided through web browsers, by accessing a particular address, and it will only be accessible to those within the university's virtual private network.
+  \item Pretix is to be provided through web browsers, by accessing a particular address, and it will only be accessible to those within the university's virtual private network (VPN).
   \item Its usage is fully dependent on the usability of the Pretix service itself and no complexity should be added by the infrastructure we provide with regards to this.
   \item We are responsible for providing free access to the ticketing platform through our servers and keeping data integrity even when the service is unavailable
   \item The installations hosting our deployment belong to a third party (the university) and thus we are not accountable for possible availability issues related to networking and machine up time.
@@ -251,6 +257,37 @@ representative of the stack's state, and a list of Service Level Indications (SL
 help us react to situations where the SLA compliance is threatened.
 These SLOs revolve around: memory capacity, operation latency, data transfer throughput, availability percentage, recovery time and reliability.
 
+\begin{table}[h!]
+  \begin{center}
+    \begin{tabular}{l|l|r|r}
+      \hline
+      \textbf{Category}   & \textbf{Metric}         & \textbf{Lower Threshold}  & \textbf{Upper Threshold}  \\
+      \hline 
+      Hardware            & System Up Time          & -                         & -                         \\
+      (SNMP)              & \% User CPU Time        & -                         & 90\%                      \\
+                          & Total RAM               & -                         & -                         \\
+                          & Total RAM Used          & -                         & -                         \\
+                          & \% RAM Usage            & -                         & 90\%                      \\
+                          & Total Disk              & -                         & -                         \\
+                          & Total Disk Used         & -                         & -                         \\
+                          & \% Disk Usage           & -                         & 90\%                      \\
+      \hline
+      Pretix              & Total \# of Events      & -                         & -                         \\
+                          & Total \# of Orders      & -                         & -                         \\
+                          & Total \# of Purchases   & -                         & -                         \\
+                          & Response Time           & -                         & 50 seconds                \\
+      \hline
+      Redis               & Redis Up Time           & -                         & -                         \\
+                          & Memory Used             & -                         & -                         \\
+                          & \# of Connections       & -                         & -                         \\
+                          & \# of Connected clients & -                         & -                         \\
+      \hline
+    \end{tabular}
+    \caption{More rows.}
+    \label{tab:table1}
+  \end{center}
+\end{table}
+
 ...
 
 \subsection{Monitoring} \label{management.monitoring} %%%%%%%%%%%%%%%%%%%%%
@@ -258,6 +295,19 @@ These SLOs revolve around: memory capacity, operation latency, data transfer thr
 % How is the infrastructure monitored? 
 % SNMP, logs, metrics exporters
 % SLA violation alarms
+
+Understanding the state of the infrastructure and components is essential for ensuring the correct functioning and stability of the service.
+Information about the health and performance of deployments not only helps us react to issues, it also gives security to make changes with confidence. 
+One of the best ways to gain this insight is with a robust monitoring system that gathers logs and metrics, visualizes data, and alerts us operators when 
+undesired events occur or when the maximum capacity of some resource is almost reached.
+% https://www.digitalocean.com/community/tutorials/an-introduction-to-metrics-monitoring-and-alerting
+% https://www.digitalocean.com/community/tutorials/an-introduction-to-snmp-simple-network-management-protocol
+
+Our monitoring system is hosted on ............... % explain proxmox etc etc
+It consists of a virtual machine (VM), running ............. % mention OS, resource (CPUs, RAM, disk, etc), etc
+
+% Metrics & Logs
+This system collects a set of metrics from each instance of the Pretix stack .............
 
 ...
 
@@ -271,48 +321,28 @@ These SLOs revolve around: memory capacity, operation latency, data transfer thr
 \newpage
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Pretix Quickstart} \label{remarks.quickstart} %%%%%%%%%%%%%%%%%
+\subsection{Swarm Stability} \label{remarks.stability} %%%%%%%%%%%%%%%%%
 
-% quickstart script
+% issues with pgpool
 
-During development, a need for a faster basic setup of Pretix emerged for debugging purposes.
-As many of our tests assumed the existence of organizers and events already inserted on the databases, each time these had to be cleared the objects had to be 
-manually created before proceeding with some implementation process.
-
-In order to respond to this need, we developed a Python script capable of completely dispose of the manual labour.
-This script, which we called \texttt{quickstart.py} and placed under a dedicated folder, uses Selenium \cite{selenium} to create an organization inside Pretix, 
-generate a secret API key for sending REST requests (storing it in a text file), create a default event and prepare it for load testing with Locust.
-It also contains configurable variables to personalize its output.
-
-Such quickstart tool was not only found useful for the obvious advantage in development speed it brought to us, but was also considered a good help tool for any 
-person that wishes to quickly experiment our infrastructure without having to know much about Pretix itself.
-
-\subsection{Documentation} \label{remarks.documentation} %%%%%%%%%%%%%%%%%%
-
-% what documentation was produced?
-
-A great portion of the code we deal with isn't of our authorship, so the documentation it contains is the documentation we get.
-Nevertheless, the code we developed has specific purposes and, although usually very much self explanatory due to its nature, should be easy to interpret by any person.
-Our goal is to ensure that what we deliver can be easily reused or even continued by other developers.
-
-With this in mind, we made significant efforts on ensuring that all code developed by us followed a common structure with the same coding style.
-Also, we made sure all source files have a description of their purpose and relevant information on the first lines, and contain comments on key points of the 
-code explaining snippets considered of greater complexity/importance.
+...
 
 \subsection{Assignment Contributions} \label{remarks.contributions} %%%%%%%%%
 
 % who did what?
 
-Regarding the work distribution among developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according 
-to a predefined plan. 
-The cluster strategy and respective details were decided in conjunction, as well as the key objectives and tasks to be achieved before the final delivery deadline.
+Due to external issues that prevented physical proximity among students and professors, a confined approach had to be adopted during this second development phase.
+Nevertheless, the close-contact strategy was kept as this project required a broad perspective on the infrastructure and the tasks to be implemented by both team members.
+Regarding the work distribution among developers, tasks were assigned to each according to a predefined plan and a common working schedule was applied. 
 
-Pretix' features were explored by both developers in order to better comprehend the web platform and the REST API.
-Then, João focused on the deployment of our solution on the department's infrastructure while Filipe focused on creating and executing the load tests.
-The analysis of the results were carefully conducted in conjunction as well, in order to maintain a common knowledge for better workflows.
+The technology-related decisions were first made in conjunction.
+Then, Filipe set up the monitoring VM to gather the data from the stack while João began to work on the mechanism to collect the logs from each container.
+Filipe moved on to installing metric exporters on each container, and João found means to collect lower level metrics using the SNMP.
+The container identification mechanism of each instance to the monitoring system was then implemented.
+At this stage, both operators worked on defining the SLA and João designed the monitoring dashboards.
+Finally, the alarms and automated response mechanisms were implemented.
 It is needless to say that bug and error solving was made along the development phase by both developers any time it was required.
-Once performance benchmarking and bottleneck identification were completed, this report and the code documentation became our primary concern, with both 
-contributing equally.
+Once a stable deployment fulfilling all predefined requirements was completed, this report became our primary concern, with both contributing equally.
 
 \newpage
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
