@@ -218,19 +218,21 @@ services:
 
   nginx: 
     #image: nginx:latest
-    build: ../components/nginx
-    #image: sophos/nginx-vts-exporter:latest
+    #build: ../components/nginx
+    build: 
+      context: ../components/nginx/docker-nginx-with-modules
+      args:
+        modules: https://github.com/vozlt/nginx-module-vts.git:v0.1.17,https://github.com/openresty/echo-nginx-module.git
     depends_on:
       - web
       - web2
     environment:
-    # - NGINX_STATUS=http://localhost/status/format/json
       - NAME={{.Task.Name}}
     secrets:
       - source: pretixNginxConf
         target: /etc/nginx/nginx.conf
     ports:
-      - 7200:80
+      - 7200:8080
       - 9913:9913
     networks:
       - pretixOut

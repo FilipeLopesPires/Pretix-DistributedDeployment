@@ -44,7 +44,7 @@ Computational Infrastructures Management\\
 \normalsize{Department of Electronics, Telecommunications and Informatics}\\
 \normalsize{University of Aveiro}\\
 } 
-
+ 
 \date{\today{}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% REPORT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,40 +255,43 @@ and response time that, according to the authors, could not be solved through ho
 Focusing on the infrastructure itself and the computational resources, we have defined a list of Service Level Objects (SLO) - the metrics to be observed -
 representative of the stack's state, and a list of Service Level Indications (SLI) - the thresholds or functions applied to the metric values - that will
 help us react to situations where the SLA compliance is threatened.
-These SLOs revolve around: memory capacity, operation latency, data transfer throughput, availability percentage, recovery time and reliability.
+These SLOs revolve around: hardware capacity, operation latency, availability percentage and reliability.
+
+Table \ref{tab:sla} presents a simplified view on the metrics used to monitor the SLA and some thresholds that aid on the prevention of a cop-out.
 
 \begin{table}[h!]
   \begin{center}
-    \begin{tabular}{l|l|r|r}
+    \begin{tabular}{l|l|r}
       \hline
-      \textbf{Category}   & \textbf{Metric}         & \textbf{Lower Threshold}  & \textbf{Upper Threshold}  \\
+      \textbf{Category}   & \textbf{Metric}         & \textbf{Upper Threshold}  \\
       \hline 
-      Hardware            & System Up Time          & -                         & -                         \\
-      (SNMP)              & \% User CPU Time        & -                         & 90\%                      \\
-                          & Total RAM               & -                         & -                         \\
-                          & Total RAM Used          & -                         & -                         \\
-                          & \% RAM Usage            & -                         & 90\%                      \\
-                          & Total Disk              & -                         & -                         \\
-                          & Total Disk Used         & -                         & -                         \\
-                          & \% Disk Usage           & -                         & 90\%                      \\
+      Hardware            & System Up Time          & -                         \\
+      (SNMP)              & \% User CPU Time        & 90\%                      \\
+                          & Total RAM               & -                         \\
+                          & Total RAM Used          & -                         \\
+                          & \% RAM Usage            & 90\%                      \\
+                          & Total Disk              & -                         \\
+                          & Total Disk Used         & -                         \\
+                          & \% Disk Usage           & 90\%                      \\
       \hline
-      Pretix              & Total \# of Events      & -                         & -                         \\
-                          & Total \# of Orders      & -                         & -                         \\
-                          & Total \# of Purchases   & -                         & -                         \\
-                          & Response Time           & -                         & 50 seconds                \\
+      Pretix              & Total \# of Events      & -                         \\
+                          & Total \# of Orders      & -                         \\
+                          & Total \# of Purchases   & -                         \\
+                          & Response Time           & 50 seconds                \\
       \hline
-      Redis               & Redis Up Time           & -                         & -                         \\
-                          & Memory Used             & -                         & -                         \\
-                          & \# of Connections       & -                         & -                         \\
-                          & \# of Connected clients & -                         & -                         \\
+      NGinX               & Total \# of Requests    & 10\% (failure)            \\
+                          & Average Response Time   & 50 seconds                \\
+      \hline
+      Redis               & Redis Up Time           & -                         \\
+                          & Memory Used             & -                         \\
+                          & \# of Connections       & -                         \\
+                          & \# of Connected clients & -                         \\
       \hline
     \end{tabular}
-    \caption{More rows.}
-    \label{tab:table1}
+    \caption{Monitored metrics, categorized by source.}
+    \label{tab:sla}
   \end{center}
 \end{table}
-
-...
 
 \subsection{Monitoring} \label{management.monitoring} %%%%%%%%%%%%%%%%%%%%%
 
@@ -297,27 +300,64 @@ These SLOs revolve around: memory capacity, operation latency, data transfer thr
 
 Understanding the state of the infrastructure and components is essential for ensuring the correct functioning and stability of the service.
 Information about the health and performance of deployments not only helps us react to issues, it also gives security to make changes with confidence. 
-One of the best ways to gain this insight is with a robust monitoring system that gathers logs and metrics, visualizes data, and alerts us operators when 
+One of the best ways to gain this insight is with a robust monitoring system that gathers logs and metrics, visually displays data, and alerts us operators when 
 undesired events occur or when the maximum capacity of some resource is almost reached.
-% https://www.digitalocean.com/community/tutorials/an-introduction-to-metrics-monitoring-and-alerting
-% https://www.digitalocean.com/community/tutorials/an-introduction-to-snmp-simple-network-management-protocol
+This kind of system also allows the definition of reactions for specific SLA violation threats.
 
-Our monitoring system is hosted on ............... % explain proxmox etc etc
-It consists of a virtual machine (VM), running ............. % mention OS, resource (CPUs, RAM, disk, etc), etc
+Our monitoring system is hosted on an independent machine with 32 cores of 2.1GHz, 64Gb of RAM and 7Tb of disk space.
+Just as the infrastructure hosting our Pretix stack, this too was shared amongst other operator teams.
+The virtual machine (VM) we instantiated for our monitoring system runs Ubuntu 20.04 LTS and has 2 CPU cores, 4Gb of RAM and 50Gb of disk space.
+The separation between our product and its monitoring was understood to be optimal, since this way there is no added load to the service facility, keeping its
+resources fully dedicated to itself.
+There is also the advantage of allowing the deployment of our system both with or without monitoring enabled.
 
 \subsubsection{Log Collection}
+Log collection, as the name implies, consists in gathering in a centralized fashion all the logs generated by all services composing our full system. There are a lot of options to achieve this, some that we considered and investigated. To analyze the logs themselves in a user-friendly and feature rich platform we choose the Elasticsearch stack(ELK), comprised of Elasticsearch itself, Logstash and Kibana. The purpose of each of those components are:
 
-...
+\begin{itemize}
+  \item Elasticsearch - text based database, optimized to search and filter through textual data,, such as logs.
+  \item Logstash - textual data(logs) collector/receiver; stack entrypoint.
+  \item Kibana - GUI data analyzer, enabling the creation of dashboards, alerts, ...
+\end{itemize}
+
+One of the approaches we tested the centralize all logs but ended up not being used in the final product was the rsyslog approach. This technology allows the definition of a server and multiple clients, each one assigned to each service, that gathers the system logs of the machine and sends them to the predefined rsyslog server. Although enabling a centralized registry of all logs of the system's services, some integration problems were encountered but after some analysis we found this option not to be optimal, since the rsyslog when receiving exterior logs will persist them in the system logs file of the hosting machine. Since this entity would be hosted by the monitoring virtual machine, every log received would be replicated since the rsyslog persists them and the Elasticsearch would also persist them due to it's indexing process.
+
+The approach we settle on ended up being much cleaner and simpler in our opinion. After some research we found that one of the logging drivers provided by the docker platform was syslog, that enables the redirecting of all logs to a syslog server specified in the driver options. This was exactly aligned with our scenario, since all our deployment was made in docker's swarm mode and we wanted to centralize all services logs. We also found that Logstash allows the creation of a server that can receive any type of message(since filters can be applied to the incoming messages), enabling the direct connection between the docker syslog driver and the ELK stack.
+
+After the logs arrive at the Logstash, the internal ELK flow was configured so that Elasticsearch indexes the information and Kibana is able to access it. The system is then capable of collecting all logs and present them in the Kibana interface, enabling a centralizes analysis and further alert definition.
+
+Further processing over collected logs can be made if the information is context specific and allows these type of processing, such as counters or other metrics. In our case we concluded that this was not necessary since we were able to obtain metrics from all the services necessary, information we processed with the technologies described in the following subsection.
 
 \subsubsection{Metric Collection}
+Metric collection is very similar to log collection in the sense that the objective is to centralize all generated information from all the system's composing services, but this time the data collected are metrics, most of the time numeric data like counters, gauges and indicators about the service process itself or even context specific ones.
+
+Obviously, there are many approaches and technologies that allow metric collection. After some investigation we found some that are commonly used for this purpose, such as Nagios, Zabbix, Munin, TICK stack, Prometheus and more. We opted to implement the Prometheus one, since our main service(Pretix) already exported metrics in the Prometheus format. For the remaining services we needed to install parallel metric exporters compatible with Prometheus. Since our infrastructure was deployed using docker in swarm mode, the addition of exporters was made by changing the Dockerfiles and respective entrypoints for each service. The mapping between service and installed exporter was:
+
+\begin{itemize}
+  \item Nginx - 
+  \item Pg Master/Slave - 
+  \item HA Proxy - 
+  \item Redis Master/Slave/Sentinel - 
+\end{itemize}
+
+In addition to all those exporters, we also installed another one in the monitoring virtual machine itself responsible for monitoring the hardware itself, like the CPU, memory and disk usage. For that task we used the SNMP protocol, which is a internet standard protocol for collecting and organizing information about managed devices on IP networks and for modifying that information to change device behavior. The protocol support was installed a priori on every compute node, being only necessary request it's metrics when necessary. Since the deployment is made using the Docker's Swarm mode, it was impossible for us to know were our services would be deployed in the Swarm computing network. With that in mind we had two options: either we statically indicated every computing node to be monitored, or we dynamically discovered the ips of the machine hosting our services. We concluded that the first option was not feasible since it would cause unnecessary stress in machines and would not scale well, since if there were 1000 computational nodes we would need to indicate the 1000 ips. We opted to dynamically discover the machine ips, which implied that we needed to create a custom ip collector.
+
+This custom component had an independent service and was created using Python's Flask library, which enabled us to quickly develop the necessary endpoints and respective logic. At initialization, each service sends a HTTP Post to our custom service with its name, replication number and id. Our service will then register or update it's ip and modify the respective Prometheus target files for each type of exporter.
+
+Prometheus is the engine behind the monitoring and alerting, but it's as necessary a powerful, usable and efficient user interface. Grafana is commonly integrated with Prometheus, being the GUI indicated by the engine itself. That was the reason we deployed Grafana, enabling us to explore the collected metrics, construct meaningful dashboards and configuring critical alerts.
 
 \subsection{Alerts and Automation} \label{management.automation} %%%%%%%%%%%%%%%%%%%%%
 
 % SLA violation alarms
 % How is the provisioning of new elements automated?
 % How is the infrastructure fault tolerant? (pgpool automated failover, redis sentinels, SLA violation alarm responses)
+Collecting metrics and logs means nothing if there's no objective. For that reason we defined the SLA described in section \ref{management.sla}, enabling us to know when the infrastructure and system are performing as expected or not. When the SLA is violated the system should notify the infrastructure manager so that a action may be performed. In more advanced scenarios, automatic reactions may be specified so that the system can adjust to certain problems, creating some desirable flexibility.
 
-...
+For our context and service, we defined both alerts and automatic responses. Alerts were configured in every metric considered critical and that it's behavior may translate in the status of the service, as explained in section \ref{management.sla}. All the generated alarms and notifications were made by a Microsoft Teams channel. All those alarms were also sent to a custom service responsible for receiving, processing and if necessary reactive to the incoming alarms. This service was the same as the one responsible for collecting the computing machines for efficiency reasons. When receiving an alarm, the component will process it and if it's one that can be corrected in an automatic fashion, a reaction will be executed, in our case, using the Docker's Python SDK to automatically scale up or down the service that triggered the alarm. The alarms and respective reaction are:
+
+\begin{itemize}
+  \item
+\end{itemize}
 
 \newpage
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -332,20 +372,9 @@ It consists of a virtual machine (VM), running ............. % mention OS, resou
 
 % who did what?
 
-<<<<<<< HEAD
 Due to external issues that prevented physical proximity among students and professors, a confined approach had to be adopted during this second development phase.
 Nevertheless, the close-contact strategy was kept as this project required a broad perspective on the infrastructure and the tasks to be implemented by both team members.
 Regarding the work distribution among developers, tasks were assigned to each according to a predefined plan and a common working schedule was applied. 
-=======
-<<<<<<< HEAD
-Regarding the work distribution amongst developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according
-to a predefined plan.
-=======
-Regarding the work distribution among developers, a close-contact strategy was defined where each worked on a cluster component or piece of software according
-to a predefined plan.
->>>>>>> 733311d3d5d304f0545f0cf5008b0bde8fced17e
-The cluster strategy and respective details were decided in conjunction, as well as the key objectives and tasks to be achieved before the final delivery deadline.
->>>>>>> 7a7ddb2fed714a84a50822704febe51539a1dcee
 
 The technology-related decisions were first made in conjunction.
 Then, Filipe set up the monitoring VM to gather the data from the stack while João began to work on the mechanism to collect the logs from each container.
@@ -354,12 +383,7 @@ The container identification mechanism of each instance to the monitoring system
 At this stage, both operators worked on defining the SLA and João designed the monitoring dashboards.
 Finally, the alarms and automated response mechanisms were implemented.
 It is needless to say that bug and error solving was made along the development phase by both developers any time it was required.
-<<<<<<< HEAD
 Once a stable deployment fulfilling all predefined requirements was completed, this report became our primary concern, with both contributing equally.
-=======
-Once performance benchmarking and bottleneck identification were completed, this report and the code documentation became our primary concern, with both
-contributing equally.
->>>>>>> 7a7ddb2fed714a84a50822704febe51539a1dcee
 
 \newpage
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
