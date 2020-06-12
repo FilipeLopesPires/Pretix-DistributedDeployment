@@ -9,7 +9,6 @@
 version: '3.3'
 services:
   pg-0:
-    #image: bitnami/postgresql-repmgr:11.7.0
     image: 10.2.0.1:5000/pretixpostgres
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
@@ -37,7 +36,6 @@ services:
       - 7258:9187
 
   pg-1:
-    #image: bitnami/postgresql-repmgr:11.7.0
     image: 10.2.0.1:5000/pretixpostgres
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
@@ -65,7 +63,6 @@ services:
       - 7257:9187
 
   pg-2:
-    #image: bitnami/postgresql-repmgr:11.7.0
     image: 10.2.0.1:5000/pretixpostgres
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
@@ -93,7 +90,6 @@ services:
       - 7256:9187
 
   pgpool:
-    # image: bitnami/pgpool:4.1.1
     image 10.2.0.1:5000/pretixpgpool
     ports:
       - 7232:5432
@@ -121,28 +117,6 @@ services:
       restart_policy:
         condition: on-failure
 
-  # pgpool:
-  #   image: postgres:11-alpine
-  #   ports:
-  #     - 7232:5432
-  #   environment:
-  #     - NAME={{.Task.Name}}
-  #     - POSTGRES_DB=customdatabase
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=adminpassword
-  #   volumes:
-  #     - /nfs/pretix/postgres/master:/var/lib/postgresql:rw
-  #   networks:
-  #     - pretixPgNetwork
-  #   # logging:
-  #   #   driver: syslog
-  #   #   options:
-  #   #     syslog-address: "udp://10.5.0.108:5000"
-  #   deploy:
-  #     replicas: 2
-  #     restart_policy:
-  #       condition: on-failure
-
   redisproxy:
     image: 10.2.0.1:5000/pretixredisproxy
     ports:
@@ -166,7 +140,6 @@ services:
 
   redismaster:
     image: 10.2.0.1:5000/pretixredismaster
-    #image: redis:5.0.9-alpine
     volumes:
       - /nfs/pretix/redis/master:/data:rw
     # logging:
@@ -182,7 +155,6 @@ services:
 
   redisslave:
     image: 10.2.0.1:5000/pretixredisslave
-    #image: redis:5.0.9-alpine
     volumes:
       - /nfs/pretix/redis/slave:/data:rw
     networks:

@@ -15,3 +15,8 @@ redis_memory_used_bytes 2.025648e+06
 redis_commands_processed_total 1115
 redis_connected_clients 2
 redis_connections_received_total 267
+
+
+nginx
+nginx_upstream_requests{backend="172.20.0.3:80",code="total",upstream="pretix"} 7 
+nginx_upstream_responseMsec{backend="172.20.0.3:80",upstream="pretix"} 13 

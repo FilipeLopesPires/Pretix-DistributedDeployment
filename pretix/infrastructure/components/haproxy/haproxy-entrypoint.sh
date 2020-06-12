@@ -20,7 +20,6 @@ listen stats
   stats hide-version
   stats realm Haproxy\ Statistics
   stats uri /haproxy_stats
-  stats auth $ADMIN_USERNAME:$ADMIN_PASSWORD
 frontend ft_redis
   mode tcp
   bind *:6379
@@ -52,7 +51,7 @@ done
 
 wget -q https://github.com/prometheus/haproxy_exporter/archive/master.zip 
 unzip -q ./master.zip
-cd ./haproxy_exporter-master && make build && ./haproxy_exporter-master --web.listen-address=":9101" &
+cd ./haproxy_exporter-master && make build && ./haproxy_exporter-master --web.listen-address=":9101" --haproxy.scrape-uri="http://localhost:9000/haproxy_stats;csv" &
 
 curl -f -s -H "Content-Type: application/json" -d "{\"service\":\"$NAME\"}" 10.5.0.108:9999/service &
 
