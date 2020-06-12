@@ -8,7 +8,6 @@ RUN apt-get install curl -y -qq
 RUN apt-get install golang -y -qq
 
 COPY haproxy-entrypoint.sh /
-
 RUN chmod +x /haproxy-entrypoint.sh
 
 EXPOSE 6379
