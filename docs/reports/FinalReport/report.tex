@@ -133,14 +133,14 @@ All code developed is publicly accessible in our GitHub repository:
 
 % What is the architecture of the infrastructure deployed?
 
-To provide the Pretix Ticketing Software to the public, it was required to set up an infrastructure containing their Django-based web application, an instance
-of a Web Server Gateway Interface (WSGI) hosting the application and of a reverse-proxy for the web application deployment in production mode, as well as a
-database management system (DBMS) (where PostgreSQL was used) for handling disk storage and a caching server (where Redis was chosen) for in-memory storage and
+To provide the Pretix Ticketing Software \cite{pretix} to the public, it was required to set up an infrastructure containing their web application, an instance 
+of a Web Server Gateway Interface (WSGI) hosting the application and of a reverse-proxy for the web application deployment in production mode, as well as a 
+database management system (DBMS) (where PostgreSQL was used) for handling disk storage and a caching server (where Redis was chosen) for in-memory storage and 
 asynchronous queuing of tasks.
 
 Our strategy is thoroughly described in the previous report, which already considered minimum redundancy to ensure availability.
-It is achieved through the usage of Docker to isolate each component for greater control and easier configuration, and Docker Swarm for the orchestration of
-the entire infrastructure.
+It is achieved through the usage of Docker \cite{docker} to isolate each component for greater control and easier configuration, and Docker Swarm \cite{dockerswarm} 
+for the orchestration of the entire infrastructure.
 Nevertheless, as it was a still primitive solution, naturally several upgrades were applied, mostly internally to each container.
 The latest architecture is visually presented in Figure \ref{fig:InfrastructureArchitecture}.
 This solution considers quality attributes whose assurance is described in the sections below.
@@ -167,18 +167,18 @@ These servers, when strategically placed, act as intermediaries for requests see
 This not only reduces the complexity of requests made to our services, but also provides additional benefits with regards to security and load balancing,
 as they allow a controlled and intelligent distribution of requests among components.
 
-An NGinX proxy was installed between the end users and the web application.
+An NGinX proxy \cite{nginx} was installed between the end users and the Django-based web application.
 With the help of Docker Swarm, replicas of both the proxy and the web application were deployed.
 This is transparent for the user and it works as if he/she is sending requests to one single access point.
 
 The storage clusters also resort to proxies.
-For the PostgreSQL server cluster, we adopted Pgpool-II.
+For the PostgreSQL server cluster \cite{postgresql}, we adopted Pgpool-II \cite{pgpool}.
 As our database is replicated in master/slave mode, Pgpool is able to take advantage of the replication feature in order to reduce the load on each PostgreSQL server
 by evenly distributing queries among available servers and consequently improving the overall throughput.
 Pgpool provides other useful features such as connection pooling, where it maintains established connections to the servers and reuses them whenever a new
 connection with the same properties comes in, and automated fail over, mentioned in greater detail in section \ref{management.automation}.
 
-For the Redis server cluster, the adopted solution was the well-known HAProxy.
+For the Redis server cluster \cite{redis}, the adopted solution was the well-known HAProxy \cite{haproxy}.
 The instances installed spread requests evenly across the Redis cluster.
 Here, a master/slave mode was also used, meaning that the proxies interact with master instances that then delegate work among slaves.
 
@@ -258,45 +258,51 @@ help us react to situations where the SLA compliance is threatened.
 These SLOs revolve around: hardware capacity, operation latency, availability percentage and reliability.
 
 Table \ref{tab:sla} presents a simplified view on the metrics used to monitor the SLA and some thresholds that aid on the prevention of a cop-out.
+Note that the chosen metrics are dependent on what is made available by each component.
 
-\begin{table}[h!]
+\begin{table}[H]
   \begin{center}
     \begin{tabular}{l|l|r}
       \hline
-      \textbf{Category}   & \textbf{Metric}         & \textbf{Upper Threshold}  \\
+      \textbf{Category}   & \textbf{Metric}           & \textbf{Upper Threshold}  \\
       \hline 
-      Hardware            & System Up Time          & -                         \\
-      (SNMP)              & \% User CPU Time        & 90\%                      \\
-                          & Total RAM               & -                         \\
-                          & Total RAM Used          & -                         \\
-                          & \% RAM Usage            & 90\%                      \\
-                          & Total Disk              & -                         \\
-                          & Total Disk Used         & -                         \\
-                          & \% Disk Usage           & 90\%                      \\
+      Hardware            & System Up Time            & -                         \\
+      (SNMP)              & \% User CPU Time          & 90\%                      \\
+                          & Total RAM                 & -                         \\
+                          & Total RAM Used            & -                         \\
+                          & \% RAM Usage              & 90\%                      \\
+                          & Total Disk                & -                         \\
+                          & Total Disk Used           & -                         \\
+                          & \% Disk Usage             & 90\%                      \\
       \hline
-      Pretix              & Total \# of Events      & -                         \\
-                          & Total \# of Orders      & -                         \\
-                          & Total \# of Purchases   & -                         \\
-                          & Response Time           & 50 seconds                \\
+      Pretix              & Total \# of Events        & -                         \\
+                          & Total \# of Orders        & -                         \\
+                          & Total \# of Purchases     & -                         \\
+                          & Response Time             & 50 seconds                \\
       \hline
-      NGinX               & Total \# of Requests    & 10\% (failure)            \\
-                          & Average Response Time   & 50 seconds                \\
+      NGinX               & Total \# of Requests      & 10\% (failure)            \\
+                          & Avg. Response Time        & 50 seconds                \\
       \hline
-      Redis               & Redis Up Time           & -                         \\
-                          & Memory Used             & -                         \\
-                          & \# of Connections       & -                         \\
-                          & \# of Connected clients & -                         \\
+      Redis               & Redis Up Time             & -                         \\
+                          & Memory Used               & -                         \\
+                          & \# of Connections         & -                         \\
+                          & \# of Connected clients   & -                         \\
+                          & Avg. Response Time        & -                         \\
+      \hline
+      PostgreSQL          & Total \# of Queries       & -                         \\
+                          & Total \# of Failures      & -                         \\
+                          & Max. Transaction Duration & 25 seconds                \\
       \hline
     \end{tabular}
     \caption{Monitored metrics, categorized by source.}
     \label{tab:sla}
   \end{center}
 \end{table}
+\vspace{-35pt}
 
 \subsection{Monitoring} \label{management.monitoring} %%%%%%%%%%%%%%%%%%%%%
 
 % How is the infrastructure monitored? 
-% SNMP, logs, metrics exporters
 
 Understanding the state of the infrastructure and components is essential for ensuring the correct functioning and stability of the service.
 Information about the health and performance of deployments not only helps us react to issues, it also gives security to make changes with confidence. 
@@ -312,57 +318,121 @@ resources fully dedicated to itself.
 There is also the advantage of allowing the deployment of our system both with or without monitoring enabled.
 
 \subsubsection{Log Collection}
-Log collection, as the name implies, consists in gathering in a centralized fashion all the logs generated by all services composing our full system. There are a lot of options to achieve this, some that we considered and investigated. To analyze the logs themselves in a user-friendly and feature rich platform we choose the Elasticsearch stack(ELK), comprised of Elasticsearch itself, Logstash and Kibana. The purpose of each of those components are:
 
-\begin{itemize}
-  \item Elasticsearch - text based database, optimized to search and filter through textual data,, such as logs.
-  \item Logstash - textual data(logs) collector/receiver; stack entrypoint.
-  \item Kibana - GUI data analyzer, enabling the creation of dashboards, alerts, ...
+There are 3 major reasons for keeping log messages of software.
+For developers, logging tools are often deployed in places where they don’t have access or there are no debugging tools, but log messages can still help to 
+localize problems.
+For operators, or system administrators, they provide insight on the state of a group of connected machines, thus helping them to make sure all run as 
+smoothly as possible.
+But perhaps the reason with greatest impact is security.
+Log monitoring systems oversee network activity, inspect system events, and store user actions that occur inside the operating systems.
+Reviewing this information is a strong means of detecting suspicious activity and identify the damage caused in case of an attack.
+
+A centralized point of log monitoring simplifies this process of message analysis, so we installed a platform in our monitoring VM responsible for collecting 
+log files from each component, storing them and presenting the data in an organized, visually useful and empowering form.
+There are a few options to achieve this and after some brainstorming and research, we found the Elasticsearch stack (ELK) \cite{elk} to be the most appropriate 
+solution for our scenario.
+This stack comprises 3 open-source projects, each with its own purpose:
+
+\vspace{-10pt}
+\begin{itemize} [noitemsep]
+  \item Elasticsearch - a search and analytics engine, optimized for textual data such as logs; logs are stored in it.
+  \item Logstash - a data ingestion tool, that serves as the stack entrypoint; responsible for collecting, transforming and sending data to a desired destination.
+  \item Kibana - a data visualization and exploration tool for reviewing logs and events; enables the creation of dashboards, alerts and more.
 \end{itemize}
+\vspace{-10pt}
 
-One of the approaches we tested the centralize all logs but ended up not being used in the final product was the rsyslog approach. This technology allows the definition of a server and multiple clients, each one assigned to each service, that gathers the system logs of the machine and sends them to the predefined rsyslog server. Although enabling a centralized registry of all logs of the system's services, some integration problems were encountered but after some analysis we found this option not to be optimal, since the rsyslog when receiving exterior logs will persist them in the system logs file of the hosting machine. Since this entity would be hosted by the monitoring virtual machine, every log received would be replicated since the rsyslog persists them and the Elasticsearch would also persist them due to it's indexing process.
+The first approach attempted used rsyslog \cite{rsyslog}.
+This technology allows the definition of a server and multiple clients, each one assigned to a service that gathers the system logs of the machine and sends 
+them to the predefined rsyslog server.
+This would provide us with centralization, but several integration issues were faced.
+Soon we found that it was not an optimal solution, since when receiving exterior logs it persists them in the system logs file of the hosting machine, resulting 
+in a duplication of logs both on hosting machines and on the monitoring VM's Elasticsearch (due to its indexing process).
 
-The approach we settle on ended up being much cleaner and simpler in our opinion. After some research we found that one of the logging drivers provided by the docker platform was syslog, that enables the redirecting of all logs to a syslog server specified in the driver options. This was exactly aligned with our scenario, since all our deployment was made in docker's swarm mode and we wanted to centralize all services logs. We also found that Logstash allows the creation of a server that can receive any type of message(since filters can be applied to the incoming messages), enabling the direct connection between the docker syslog driver and the ELK stack.
+The second approach ended up being much cleaner and simpler.
+After some research we found that one of the logging drivers provided by the docker platform was syslog \cite{dockersyslog}.
+Syslog enables the redirecting of all logs to a syslog server specified in the driver options - which was aligned with our scenario. 
+We also found that Logstash allows the creation of a server that can receive any type of message (since filters can be applied to the incoming messages), 
+enabling the direct connection between the docker syslog driver and the ELK stack.
 
-After the logs arrive at the Logstash, the internal ELK flow was configured so that Elasticsearch indexes the information and Kibana is able to access it. The system is then capable of collecting all logs and present them in the Kibana interface, enabling a centralizes analysis and further alert definition.
-
-Further processing over collected logs can be made if the information is context specific and allows these type of processing, such as counters or other metrics. In our case we concluded that this was not necessary since we were able to obtain metrics from all the services necessary, information we processed with the technologies described in the following subsection.
+After the logs arrive at Logstash, the internal ELK flow was configured so that Elasticsearch indexes the information and Kibana is able to access it. 
+The system is thus capable of collecting all logs and present them in the Kibana interface.
+Further processing over collected logs can be made if the information is context specific and allows these type of processing, such as counters or other metrics. 
+However, in our case this was found unnecessary since we were able to obtain metrics from all the services necessary.
 
 \subsubsection{Metric Collection}
-Metric collection is very similar to log collection in the sense that the objective is to centralize all generated information from all the system's composing services, but this time the data collected are metrics, most of the time numeric data like counters, gauges and indicators about the service process itself or even context specific ones.
 
-Obviously, there are many approaches and technologies that allow metric collection. After some investigation we found some that are commonly used for this purpose, such as Nagios, Zabbix, Munin, TICK stack, Prometheus and more. We opted to implement the Prometheus one, since our main service(Pretix) already exported metrics in the Prometheus format. For the remaining services we needed to install parallel metric exporters compatible with Prometheus. Since our infrastructure was deployed using docker in swarm mode, the addition of exporters was made by changing the Dockerfiles and respective entrypoints for each service. The mapping between service and installed exporter was:
+Metrics, monitoring, and alerting are all interrelated concepts with the ability to provide visibility into the health of a system, to help you understand trends 
+in usage or behavior, and to understand the impact of changes applied. 
+If the metrics fall outside of expected ranges, a monitoring system that incorporates such concepts can send notifications to prompt an operator to take a look, 
+can then assist in surfacing information to help identify the possible causes, and can even have predefined response measures triggered on specific states.
 
-\begin{itemize}
-  \item Nginx - 
-  \item Pg Master/Slave - 
-  \item HA Proxy - 
-  \item Redis Master/Slave/Sentinel - 
+Centralizing metrics has the same benefits as doing so with log messages.
+However, metrics do not provide a historical record of the system's behavior, rather they present in great detail the current state of the system, mostly through 
+numeric data like counters, gauges and service or context-specific indicators.
+
+Naturally, there are a few approaches and technologies that allow metric collection. 
+After some research, we found some that are commonly used for this purpose, such as Nagios, Zabbix, Munin, TICK stack, Prometheus and more. 
+We resorted to Prometheus \cite{prometheus}, since our product Pretix - our main service - already exported metrics in a format compatible with Prometheus.
+
+For the remaining services we installed parallel metric exporters compatible with Prometheus. 
+Since our infrastructure was deployed using docker in swarm mode, the addition of exporters was made by changing the Docker files and respective entry points 
+for each service. 
+The mapping between service and installed exporter is:
+
+\vspace{-10pt}
+\begin{itemize} [noitemsep]
+  \item HA Proxy - \href{https://github.com/prometheus/haproxy_exporter}{Official Statistics Exporter}.
+  \item Nginx - \href{https://github.com/hnlq715/nginx-vts-exporter}{VTS Statistics Exporter}.
+  \item PostgreSQL Master/Slave - \href{https://github.com/wrouesnel/postgres_exporter}{Server Metrics Exporter}.
+  \item Redis Master/Slave/Sentinel - \href{https://github.com/oliver006/redis_exporter}{Server Metrics Exporter}.
 \end{itemize}
+\vspace{-10pt}
 
-In addition to all those exporters, we also installed another one in the monitoring virtual machine itself responsible for monitoring the hardware itself, like the CPU, memory and disk usage. For that task we used the SNMP protocol, which is a internet standard protocol for collecting and organizing information about managed devices on IP networks and for modifying that information to change device behavior. The protocol support was installed a priori on every compute node, being only necessary request it's metrics when necessary. Since the deployment is made using the Docker's Swarm mode, it was impossible for us to know were our services would be deployed in the Swarm computing network. With that in mind we had two options: either we statically indicated every computing node to be monitored, or we dynamically discovered the ips of the machine hosting our services. We concluded that the first option was not feasible since it would cause unnecessary stress in machines and would not scale well, since if there were 1000 computational nodes we would need to indicate the 1000 ips. We opted to dynamically discover the machine ips, which implied that we needed to create a custom ip collector.
+An additional exporter was installed in the monitoring VM, so that hardware-related metrics could also be monitored, such as CPU, memory and disk usage, 
+To achieve this, we resorted to the Simple Network Management Protocol (SNMP), an internet standard protocol for collecting and organizing information about 
+managed devices on IP networks and for modifying that information to change device behavior. 
+The protocol support was installed \textit{a priori} on every compute node, being only necessary to request it's metrics when needed. 
+However, this posed an additional challenge: since the deployment is made in Swarm mode, it was impossible for us to know where our services would be deployed 
+in the Swarm computing network. 
+Statically indicating every computing node to be monitored would cause stress on machines and would not scale properly, so we implemented a dynamic IP address 
+discovery mechanism.
 
-This custom component had an independent service and was created using Python's Flask library, which enabled us to quickly develop the necessary endpoints and respective logic. At initialization, each service sends a HTTP Post to our custom service with its name, replication number and id. Our service will then register or update it's ip and modify the respective Prometheus target files for each type of exporter.
+This custom address collector has an independent service and was created using Python's Flask library, which enabled us to quickly develop the necessary endpoints 
+and respective logic. 
+At initialization, each service sends an HTTP Post to our custom service with its name, replication number and identifier. 
+The collector service then registers or updates it's IP table and modifies the respective Prometheus target files for each type of exporter.
 
-Prometheus is the engine behind the monitoring and alerting, but it's as necessary a powerful, usable and efficient user interface. Grafana is commonly integrated with Prometheus, being the GUI indicated by the engine itself. That was the reason we deployed Grafana, enabling us to explore the collected metrics, construct meaningful dashboards and configuring critical alerts.
+Our choice for the graphical user interface (GUI) to interact with Prometheus was Grafana \cite{grafana}, commonly integrated with Prometheus as it is the GUI 
+indicated by the engine itself. 
+Grafana allows us to explore the collected metrics, construct meaningful dashboards and configure critical alerts, as we will see further ahead.
 
-\subsection{Alerts and Automation} \label{management.automation} %%%%%%%%%%%%%%%%%%%%%
+\subsection{Alerts and Automation} \label{management.automation} %%%%%%%%%%%%%%%
 
 % SLA violation alarms
 % How is the provisioning of new elements automated?
 % How is the infrastructure fault tolerant? (pgpool automated failover, redis sentinels, SLA violation alarm responses)
-Collecting metrics and logs means nothing if there's no objective. For that reason we defined the SLA described in section \ref{management.sla}, enabling us to know when the infrastructure and system are performing as expected or not. When the SLA is violated the system should notify the infrastructure manager so that a action may be performed. In more advanced scenarios, automatic reactions may be specified so that the system can adjust to certain problems, creating some desirable flexibility.
 
-For our context and service, we defined both alerts and automatic responses. Alerts were configured in every metric considered critical and that it's behavior may translate in the status of the service, as explained in section \ref{management.sla}. All the generated alarms and notifications were made by a Microsoft Teams channel. All those alarms were also sent to a custom service responsible for receiving, processing and if necessary reactive to the incoming alarms. This service was the same as the one responsible for collecting the computing machines for efficiency reasons. When receiving an alarm, the component will process it and if it's one that can be corrected in an automatic fashion, a reaction will be executed, in our case, using the Docker's Python SDK to automatically scale up or down the service that triggered the alarm. The alarms and respective reaction are:
+At this stage we had built an arsenal for the operation of our product.
+Guided by our SLA, we proceeded to defining meaningful alerts triggered by thresholds applied to specific metrics, and automatic reaction measures in order to 
+prevent agreement breaches provide flexibility to the whole infrastructure.
+All the generated alarms and notifications are sent to a dedicated Microsoft Teams channel and to a custom service responsible for processing and reacting. 
+This service is none other that the IP address collector that, using Docker's Python SDK \cite{dockerpythonsdk}, is capable of automatically scaling up or down 
+a service that triggered a received alarm.
+Following is a list of the implemented alarms and respective reaction behaviors:
 
-\begin{itemize}
-  \item
-\end{itemize}
+\vspace{-10pt}
+\begin{enumerate}[noitemsep]
+  \item ...
+\end{enumerate}
+\vspace{-10pt}
+
+...
 
 \newpage
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Swarm Stability} \label{remarks.stability} %%%%%%%%%%%%%%%%%
+\subsection{Swarm Stability} \label{remarks.stability} %%%%%%%%%%%%%%%%%%%%%
 
 % issues with pgpool
 
@@ -395,122 +465,157 @@ Once a stable deployment fulfilling all predefined requirements was completed, t
   \bibliographystyle{Science}
 
   \bibitem{assign}
-  J. P. Barraca,
-  \textit{GIC - Report no.2: Simple Product Operation},
-  University of Aveiro,
-  2019/20.
-  \vspace{-10pt}
+    J. P. Barraca,
+    \textit{GIC - Report no.2: Redundant Product Operation},
+    University of Aveiro,
+    2019/20.
+    \vspace{-10pt}
 
   \bibitem{pretix}
-  \textit{About Pretix},
-  \url{https://pretix.eu/about/en/}.
-  Pretix.eu,
-  retrieved in April 2020.
-  \vspace{-10pt}
-
-  \bibitem{rami.io}
-  \textit{Welcome to Rami.io},
-  \url{https://rami.io/}.
-  Rami.io,
-  retrieved in April 2020.
-  \vspace{-10pt}
-
-  \bibitem{pretixgit}
-  \textit{Pretix Code Repository},
-  \url{https://github.com/pretix/pretix}.
-  GitHub, Inc.,
-  retrieved in April 2020.
-  \vspace{-10pt}
-
-  \bibitem{pretixdoc}
-  \textit{Welcome to pretix' documentation!},
-  \url{https://docs.pretix.eu/en/latest/}.
-  Pretix.eu,
-  retrieved in April 2020.
-  \vspace{-10pt}
+    \textit{About Pretix},
+    \url{https://pretix.eu/about/en/}.
+    Pretix.eu,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
   \bibitem{docker}
-  \textit{Docker Homepage},
-  \url{https://www.docker.com/}.
-  Docker Inc.,
-  retrieved in April 2020.
-  \vspace{-26pt}
+    \textit{Docker Homepage},
+    \url{https://www.docker.com/}.
+    Docker Inc.,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
-  \bibitem{pretix_img}
-  \textit{pretix/standalone},
-  \url{https://hub.docker.com/r/pretix/standalone}.
-  pretix,
-  retrieved in April 2020.
-  \vspace{-10pt}
-
-  \bibitem{django}
-  \textit{Meet Django},
-  \url{https://www.djangoproject.com/}.
-  Django Software Foundation and individual contributors,
-  retrieved in April 2020.
-  \vspace{-10pt}
-
-  \bibitem{gunicorn}
-  \textit{Gunicorn Homepage},
-  \url{https://gunicorn.org/}.
-  Gunicorn.org,
-  retrieved in April 2020.
-  \vspace{-10pt}
+  \bibitem{dockerswarm}
+    \textit{Docker Docs: Getting Started with Swarm Mode},
+    \url{https://docs.docker.com/engine/swarm/swarm-tutorial/}.
+    Docker Inc.,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
   \bibitem{nginx}
-  \textit{NGinX News},
-  \url{https://nginx.org/}.
-  NGinX.org,
-  retrieved in April 2020.
-  \vspace{-10pt}
+    \textit{NGinX News},
+    \url{https://nginx.org/}.
+    NGinX.org,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
   \bibitem{postgresql}
-  \textit{PostgreSQL: The World's Most Advanced Open Source Relational Database},
-  \url{https://www.postgresql.org/}.
-  The PostgreSQL Global Development Group,
-  retrieved in April 2020.
-  \vspace{-10pt}
-
-  \bibitem{redis}
-  \textit{About Redis},
-  \url{https://redis.io/}.
-  Redis Labs,
-  retrieved in April 2020.
-  \vspace{-10pt}
+    \textit{PostgreSQL: The World's Most Advanced Open Source Relational Database},
+    \url{https://www.postgresql.org/}.
+    The PostgreSQL Global Development Group,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
   \bibitem{pgpool}
-  \textit{Welcome to Pgpool-II},
-  \url{https://www.pgpool.net/mediawiki/index.php/Main_Page}.
-  PgPool Global Development Group,
-  retrieved in April 2020.
-  \vspace{-10pt}
+    \textit{Welcome to Pgpool-II},
+    \url{https://www.pgpool.net/mediawiki/index.php/Main_Page}.
+    PgPool Global Development Group,
+    retrieved in June 2020.
+    \vspace{-10pt}
+
+  \bibitem{redis}
+    \textit{About Redis},
+    \url{https://redis.io/}.
+    Redis Labs,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
   \bibitem{haproxy}
-  \textit{HAProxy: The Reliable, High Performance TCP/HTTP Load Balancer},
-  \url{https://www.haproxy.org/}.
-  HAProxy.org,
-  retrieved in April 2020.
-  \vspace{-10pt}
+    \textit{HAProxy: The Reliable, High Performance TCP/HTTP Load Balancer},
+    \url{https://www.haproxy.org/}.
+    HAProxy.org,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
-  \bibitem{locust}
-  \textit{Locust, an open source load testing tool},
-  \url{https://locust.io/}.
-  Locust.io,
-  retrieved in April 2020.
-  \vspace{-10pt}
+  \bibitem{elk}
+    \textit{What is the ELK Stack},
+    \url{https://www.elastic.co/what-is/elk-stack}.
+    Apache Software Foundation,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
-  \bibitem{selenium}
-  \textit{About Selenium},
-  \url{https://www.selenium.dev/about/}.
-  Software Freedom Conservancy,
-  retrieved in April 2020.
-  \vspace{-10pt}
+  \bibitem{rsyslog}
+    \textit{RSyslog: The Rocket-Fast Syslog Server},
+    \url{https://www.rsyslog.com/}.
+    Adiscon GmbH,
+    retrieved in June 2020.
+    \vspace{-10pt}
 
-  \bibitem{ansible}
-  \textit{Ansible},
-  \url{https://www.ansible.com/}.
-  Red Hat,
-  retrieved in April 2020.
+  \bibitem{dockersyslog}
+    \textit{Docker Docs: Configure Logging Drivers},
+    \url{https://docs.docker.com/config/containers/logging/configure/}.
+    Docker Inc.,
+    retrieved in June 2020.
+    \vspace{-10pt}
+
+  \bibitem{prometheus}
+    \textit{Prometheus: from Metrics to Insight},
+    \url{https://prometheus.io/}.
+    The Linux Foundation,
+    retrieved in June 2020.
+    \vspace{-10pt}
+
+  \bibitem{grafana}
+    \textit{Grafana: the Analytics Platform for all your Metrics},
+    \url{https://grafana.com/}.
+    Grafana Labs,
+    retrieved in June 2020.
+    \vspace{-10pt}
+
+  \bibitem{dockerpythonsdk}
+    \textit{Docker SDK for Python},
+    \url{https://docker-py.readthedocs.io/en/stable/}.
+    Docker Inc.,
+    retrieved in June 2020.
+    \vspace{-10pt}
+    
+  % \bibitem{pretixgit}
+  % \textit{Pretix Code Repository},
+  % \url{https://github.com/pretix/pretix}.
+  % GitHub, Inc.,
+  % retrieved in June 2020.
+  % \vspace{-10pt}
+
+  % \bibitem{pretixdoc}
+  % \textit{Welcome to pretix' documentation!},
+  % \url{https://docs.pretix.eu/en/latest/}.
+  % Pretix.eu,
+  % retrieved in June 2020.
+  % \vspace{-10pt}
+
+  % \bibitem{pretix_img}
+  % \textit{pretix/standalone},
+  % \url{https://hub.docker.com/r/pretix/standalone}.
+  % pretix,
+  % retrieved in June 2020.
+  % \vspace{-10pt}
+
+  % \bibitem{gunicorn}
+  % \textit{Gunicorn Homepage},
+  % \url{https://gunicorn.org/}.
+  % Gunicorn.org,
+  % retrieved in June 2020.
+  % \vspace{-10pt}
+
+  % \bibitem{locust}
+  % \textit{Locust, an open source load testing tool},
+  % \url{https://locust.io/}.
+  % Locust.io,
+  % retrieved in June 2020.
+  % \vspace{-10pt}
+
+  % \bibitem{selenium}
+  % \textit{About Selenium},
+  % \url{https://www.selenium.dev/about/}.
+  % Software Freedom Conservancy,
+  % retrieved in June 2020.
+  % \vspace{-10pt}
+
+  % \bibitem{ansible}
+  % \textit{Ansible},
+  % \url{https://www.ansible.com/}.
+  % Red Hat,
+  % retrieved in June 2020.
 
 \end{thebibliography}
 
