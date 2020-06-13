@@ -60,7 +60,7 @@ def updateExporters(serviceType, replica, ip):
     elif serviceType=="pretix_redisproxy":
         redisproxy[replica]=ip+":7255"
     elif serviceType=="pretix_web":
-        web[replica]=ip+":7201"
+        web[replica]=ip+":7200"
     elif serviceType=="pretix_nginx":
         nginx[replica]=ip+":7250"
     elif serviceType=="pretix_pg0":
@@ -86,7 +86,15 @@ def receiveServiceIP():
 
 @app.route('/alert', methods=["POST"])
 def receiveAlert():
-    logging.warning(request.data)
+    data=json.loads(request.data)
+    logging.warning("Received Alert: "+str(data))
+    rule=data["ruleName"]
+    if rule in ["NGINX-Pretix Response Time alert","PRETIX-Number of Events alert[test]","PRETIX-Order POST Time Distribution alert"]:
+        logging.warning("Scaling up service 'web'")
+        dockerScaleServiceUp("web")
+    elif rule in ["REDIS-# Connected Clients alert", "HAPROXY-Proxy Average Response Time of Redis alert"]:
+        logging.warning("Scaling up service 'redisslave'")
+        dockerScaleServiceUp("redisslave")
     return ''
 
 if __name__ == "__main__":

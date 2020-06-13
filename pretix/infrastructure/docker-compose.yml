@@ -90,7 +90,7 @@ services:
       - 7256:9187
 
   pgpool:
-    image 10.2.0.1:5000/pretixpgpool
+    image: 10.2.0.1:5000/pretixpgpool
     ports:
       - 7232:5432
     environment:
@@ -162,10 +162,6 @@ services:
     environment:
       - REDIS_MASTER=redismaster
       - NAME={{.Task.Name}}
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
     # logging:
     #   driver: syslog
     #   options:

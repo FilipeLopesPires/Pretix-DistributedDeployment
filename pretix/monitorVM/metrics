@@ -17,6 +17,18 @@ redis_connected_clients 2
 redis_connections_received_total 267
 
 
+haproxy
+haproxy_backend_connection_errors_total{backend="bk_redis"} 0 
+haproxy_backend_current_queue{backend="bk_redis"} 0 
+haproxy_backend_http_response_time_average_seconds{backend="bk_redis"} 0 
+haproxy_backend_response_errors_total{backend="bk_redis"} 0 
+
+
 nginx
 nginx_upstream_requests{backend="172.20.0.3:80",code="total",upstream="pretix"} 7 
 nginx_upstream_responseMsec{backend="172.20.0.3:80",upstream="pretix"} 13 
+
+postgres
+pg_stat_activity_count{datname="customdatabase",server="localhost:5432",state="active"} 1 
+pg_stat_activity_max_tx_duration{datname="customdatabase",server="localhost:5432",state="active"} 0 
+pg_stat_database_conflicts_confl_deadlock{datid="16384",datname="customdatabase",server="localhost:5432"} 0 
