@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.11)  13 JUN 2020 20:29
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2020.5.11)  14 JUN 2020 14:26
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -594,106 +594,106 @@ File: diagrams/InfrastructureArchitecture.png Graphic file (type png)
 Package pdftex.def Info: diagrams/InfrastructureArchitecture.png  used on input line 152.
 (pdftex.def)             Requested size: 386.96024pt x 282.37608pt.
  [2 </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/diagrams/InfrastructureArchitecture.png>] [3] [4]
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 243.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 245.
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 243.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 245.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 247.
+(Font)              <5> on input line 249.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 267.
- [5] [6] [7]
-Overfull \hbox (6.02757pt too wide) in paragraph at lines 380--384
-[]\OT1/ptm/m/n/12 For the re-main-ing ser-vices we in-stalled par-al-lel met-ric ex-porters com-pat-i-ble with Prometheus.
- []
-
-[8] [9] [10] [11]
-Underfull \hbox (badness 4995) in paragraph at lines 520--525
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 269.
+ [5] [6] [7] [8] [9] [10] [11]
+Underfull \hbox (badness 4995) in paragraph at lines 527--532
 []\OT1/ptm/m/it/12 Welcome to Pgpool-II\OT1/ptm/m/n/12 , []$\OT1/pcr/m/n/12 https : / / www . pgpool . net / mediawiki / index . php /
  []
 
 
-Underfull \hbox (badness 2772) in paragraph at lines 541--546
+Underfull \hbox (badness 2772) in paragraph at lines 548--553
 []\OT1/ptm/m/it/12 What is the ELK Stack\OT1/ptm/m/n/12 , []$\OT1/pcr/m/n/12 https : / / www . elastic . co / what-[]is / elk-[]stack$[]\OT1/ptm/m/n/12 .
  []
 
 [12]
-<images/kibana.png, id=197, 2566.58875pt x 1386.17876pt>
+<images/kibana.png, id=198, 2566.58875pt x 1386.17876pt>
 File: images/kibana.png Graphic file (type png)
 <use images/kibana.png>
-Package pdftex.def Info: images/kibana.png  used on input line 639.
+Package pdftex.def Info: images/kibana.png  used on input line 646.
 (pdftex.def)             Requested size: 455.24408pt x 245.86337pt.
-<images/home.png, id=198, 1927.2pt x 986.68625pt>
+<images/home.png, id=199, 1927.2pt x 986.68625pt>
 File: images/home.png Graphic file (type png)
 <use images/home.png>
-Package pdftex.def Info: images/home.png  used on input line 645.
+Package pdftex.def Info: images/home.png  used on input line 652.
 (pdftex.def)             Requested size: 455.24408pt x 233.07574pt.
-<images/pretixServiceDashboard.png, id=199, 1927.2pt x 991.705pt>
+<images/pretixServiceDashboard.png, id=200, 1927.2pt x 991.705pt>
 File: images/pretixServiceDashboard.png Graphic file (type png)
 <use images/pretixServiceDashboard.png>
-Package pdftex.def Info: images/pretixServiceDashboard.png  used on input line 651.
+Package pdftex.def Info: images/pretixServiceDashboard.png  used on input line 658.
 (pdftex.def)             Requested size: 455.24408pt x 234.26128pt.
  [13
 
  </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/kibana.png> </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/home.png>]
-<images/pretixRedisDashboard.png, id=207, 1927.2pt x 989.6975pt>
+<images/pretixRedisDashboard.png, id=208, 1927.2pt x 989.6975pt>
 File: images/pretixRedisDashboard.png Graphic file (type png)
 <use images/pretixRedisDashboard.png>
-Package pdftex.def Info: images/pretixRedisDashboard.png  used on input line 657.
+Package pdftex.def Info: images/pretixRedisDashboard.png  used on input line 664.
 (pdftex.def)             Requested size: 455.24408pt x 233.78706pt.
-<images/pretixRedis2Dashboard.png, id=208, 1927.2pt x 990.70125pt>
+<images/pretixRedis2Dashboard.png, id=209, 1927.2pt x 990.70125pt>
 File: images/pretixRedis2Dashboard.png Graphic file (type png)
 <use images/pretixRedis2Dashboard.png>
-Package pdftex.def Info: images/pretixRedis2Dashboard.png  used on input line 663.
+Package pdftex.def Info: images/pretixRedis2Dashboard.png  used on input line 670.
 (pdftex.def)             Requested size: 455.24408pt x 234.02417pt.
  [14 </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixServiceDashboard.png> </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixRedisDashboard.png>]
-<images/pretixPostgresDashboard.png, id=215, 1927.2pt x 987.69pt>
+<images/pretixPostgresDashboard.png, id=216, 1927.2pt x 987.69pt>
 File: images/pretixPostgresDashboard.png Graphic file (type png)
 <use images/pretixPostgresDashboard.png>
-Package pdftex.def Info: images/pretixPostgresDashboard.png  used on input line 669.
+Package pdftex.def Info: images/pretixPostgresDashboard.png  used on input line 676.
 (pdftex.def)             Requested size: 455.24408pt x 233.31285pt.
-<images/pretixNginxDashboard.png, id=216, 1927.2pt x 989.6975pt>
+<images/pretixNginxDashboard.png, id=217, 1927.2pt x 989.6975pt>
 File: images/pretixNginxDashboard.png Graphic file (type png)
 <use images/pretixNginxDashboard.png>
-Package pdftex.def Info: images/pretixNginxDashboard.png  used on input line 675.
+Package pdftex.def Info: images/pretixNginxDashboard.png  used on input line 682.
 (pdftex.def)             Requested size: 455.24408pt x 233.78706pt.
  [15 </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixRedis2Dashboard.png> </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixPostgresDashboard.png>]
-<images/pretixSnmpDashboard.png, id=223, 1927.2pt x 987.69pt>
+<images/pretixSnmpDashboard.png, id=224, 1927.2pt x 987.69pt>
 File: images/pretixSnmpDashboard.png Graphic file (type png)
 <use images/pretixSnmpDashboard.png>
-Package pdftex.def Info: images/pretixSnmpDashboard.png  used on input line 681.
+Package pdftex.def Info: images/pretixSnmpDashboard.png  used on input line 688.
 (pdftex.def)             Requested size: 455.24408pt x 233.31285pt.
-<images/pretixSnmp2Dashboard.png, id=224, 1927.2pt x 985.6825pt>
+<images/pretixSnmp2Dashboard.png, id=225, 1927.2pt x 985.6825pt>
 File: images/pretixSnmp2Dashboard.png Graphic file (type png)
 <use images/pretixSnmp2Dashboard.png>
-Package pdftex.def Info: images/pretixSnmp2Dashboard.png  used on input line 687.
+Package pdftex.def Info: images/pretixSnmp2Dashboard.png  used on input line 694.
 (pdftex.def)             Requested size: 455.24408pt x 232.83864pt.
  [16 </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixNginxDashboard.png> </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixSnmpDashboard.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 692.
- [17 </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixSnmp2Dashboard.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 692.
+<images/alerts.png, id=232, 1927.2pt x 1056.94875pt>
+File: images/alerts.png Graphic file (type png)
+<use images/alerts.png>
+Package pdftex.def Info: images/alerts.png  used on input line 700.
+(pdftex.def)             Requested size: 455.24408pt x 249.6732pt.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 705.
+ [17 </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/pretixSnmp2Dashboard.png> </home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/images/alerts.png>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 705.
  (/home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 692.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 692.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 705.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 705.
 Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 4F3980072FC3C62FEF94077E9923E7F0;973.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 692.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 705.
  ) 
 Here is how much of TeX's memory you used:
- 19351 strings out of 492609
- 373587 string characters out of 6131462
- 411023 words of memory out of 5000000
- 23081 multiletter control sequences out of 15000+600000
+ 19358 strings out of 492609
+ 373713 string characters out of 6131462
+ 411088 words of memory out of 5000000
+ 23086 multiletter control sequences out of 15000+600000
  556378 words of font info for 73 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  40i,8n,63p,714b,720s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on /home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/report.pdf (17 pages, 1529568 bytes).
+Output written on /home/joaoalegria/Desktop/GIC/docs/reports/FinalReport/report.pdf (17 pages, 1658632 bytes).
 PDF statistics:
- 273 PDF objects out of 1000 (max. 8388607)
- 226 compressed objects within 3 object streams
- 68 named destinations out of 1000 (max. 500000)
- 171 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 276 PDF objects out of 1000 (max. 8388607)
+ 227 compressed objects within 3 object streams
+ 69 named destinations out of 1000 (max. 500000)
+ 176 words of extra memory for PDF output out of 10000 (max. 10000000)
 

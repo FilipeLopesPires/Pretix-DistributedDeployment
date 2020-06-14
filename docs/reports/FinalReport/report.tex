@@ -176,7 +176,7 @@ For the PostgreSQL server cluster \cite{postgresql}, we adopted Pgpool-II \cite{
 As our database is replicated in master/slave mode, Pgpool is able to take advantage of the replication feature in order to reduce the load on each PostgreSQL server
 by evenly distributing queries among available servers and consequently improving the overall throughput.
 Pgpool provides other useful features such as connection pooling, where it maintains established connections to the servers and reuses them whenever a new
-connection with the same properties comes in, and automated fail over, mentioned in greater detail in section \ref{management.automation}.
+connection with the same properties comes in.
 
 For the Redis server cluster \cite{redis}, the adopted solution was the well-known HAProxy \cite{haproxy}.
 The instances installed spread requests evenly across the Redis cluster.
@@ -204,6 +204,8 @@ master fails a slave is elected the new master.
 Fortunately, for the PostgreSQL cluster this reelection process is done automatically, but for the Redis cluster the use of sentinels is required: sentinels
 observe the behavior of masters and slaves, detect failures and reassign roles when needed; here we insist on providing N+1 redundancy by having multiple
 instances of sentinels as well.
+
+The redundancy supported also enables the system to be fault tolerant, since with the N+1 replication of each component, we guarantee that if any of of the replicas of our service fail and for some reason stops responding, the other replicas and the proxy and redirecting mechanisms ensure that our systems doesn't stop. This kind of failures are transparent for the end-user.
 
 \subsection{Scalability} \label{architecture.scalability} %%%%%%%%%%%%%%%%%%%%%
 
@@ -346,8 +348,8 @@ The first approach attempted used rsyslog \cite{rsyslog}.
 This technology allows the definition of a server and multiple clients, each one assigned to a service that gathers the system logs of the machine and sends
 them to the predefined rsyslog server.
 This would provide us with centralization, but several integration issues were faced.
-Soon we found that it was not an optimal solution, since when receiving exterior logs it persists them in the system logs file of the hosting machine, resulting
-in a duplication of logs both on hosting machines and on the monitoring VM's Elasticsearch (due to its indexing process).
+Soon we found that it was not an optimal solution, since when receiving exterior logs, the rsyslog server persists them in the system logs file of the hosting machine, resulting
+in a duplication of logs both on hosting machine and on Elasticsearch (due to its indexing process).
 
 The second approach ended up being much cleaner and simpler.
 After some research we found that one of the logging drivers provided by the docker platform was syslog \cite{dockersyslog}.
@@ -364,7 +366,7 @@ An example of the populated Kibana GUI is present in figure \ref{fig:kibana}.
 
 \subsubsection{Metric Collection}
 
-Metrics, monitoring, and alerting are all interrelated concepts with the ability to provide visibility into the health of a system, to help you understand trends
+Metrics monitoring and alerting are all interrelated concepts with the ability to provide visibility into the health of a system, to help you understand trends
 in usage or behavior, and to understand the impact of changes applied.
 If the metrics fall outside of expected ranges, a monitoring system that incorporates such concepts can send notifications to prompt an operator to take a look,
 can then assist in surfacing information to help identify the possible causes, and can even have predefined response measures triggered on specific states.
@@ -377,7 +379,7 @@ Naturally, there are a few approaches and technologies that allow metric collect
 After some research, we found some that are commonly used for this purpose, such as Nagios, Zabbix, Munin, TICK stack, Prometheus and more.
 We resorted to Prometheus \cite{prometheus}, since our product Pretix - our main service - already exported metrics in a format compatible with Prometheus.
 
-For the remaining services we installed parallel metric exporters compatible with Prometheus.
+For the remaining services we installed metric exporters parallel to the services themselves and compatible with Prometheus.
 Since our infrastructure was deployed using docker in swarm mode, the addition of exporters was made by changing the Docker files and respective entry points
 for each service.
 The mapping between service and installed exporter is:
@@ -419,7 +421,7 @@ Figures \ref{fig:home}, \ref{fig:pretix}, \ref{fig:nginx}, \ref{fig:postgres}, \
 
 At this stage we had built an arsenal for the operation of our product.
 Guided by our SLA, we proceeded to defining meaningful alerts triggered by thresholds applied to specific metrics, and automatic reaction measures in order to
-prevent agreement breaches provide flexibility to the whole infrastructure.
+prevent agreement breaches and provide flexibility to the whole infrastructure.
 All the generated alarms and notifications are sent to a dedicated Microsoft Teams channel and to a custom service responsible for processing and reacting.
 This service is none other that the IP address collector that, using Docker's Python SDK \cite{dockerpythonsdk}, is capable of automatically scaling up or down
 a service that triggered a received alarm.
@@ -435,7 +437,9 @@ Following is a list of the implemented alarms and respective reaction behaviors:
 \end{enumerate}
 \vspace{-10pt}
 
-A note need to be made related to the \texttt{PRETIX-Number of Events alert[test]} alert. Tis event was created for testing purposes, since we needed a consistent and controlled way to trigger an alert. With the monitoring of the number of events created in Pretix, we were able to establish a low threshold that enabled us to trigger an event just by creating a event in the Pretix platform. With this refined control we were able to test and successfully implement the mechanisms for the mentioned automatic rescaling reactions.
+A note need to be made related to the \texttt{PRETIX-Number of Events alert[test]} alert. This event was created for testing purposes, since we needed a consistent and controlled way to trigger an alert. With the monitoring of the number of events created in Pretix, we were able to establish a low threshold that enabled us to trigger an event just by creating a event in the Pretix platform. With this refined control we were able to test and successfully implement the mechanisms for the mentioned automatic scaling reactions.
+
+Figure \ref{fig:alerts} is an example of the alerts received in Microsoft Teams.
 
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -445,7 +449,7 @@ During the development and configuration of our infrastructure and monitoring fa
 
 This environment translation proved to create some unpredicted problems. Our team was totally prepared and all the work developed was completely in sync and compatible with the Swarm mode. The mentioned problems were caused by the infrastructure itself instability, mainly caused by the available connection between the compute nodes. This instability was expected and understandable not only because it is intrinsic of a system in production, but also because all resources were limited, that includes hardware limit by budget, time and maintenance capability being the course teacher the only one in charge of administrating the infrastructure.
 
-Although expected, this instability caused problems when testing in the intended remote environment, many times postponing necessary test by unexpected errors many times not caused by our work, making the team investigate and spend time in a problem that we couldn't resolve. These problems were predominant in the PostgreSQL cluster, since internally it's components need to establish a replication scheme by exchanging control messages through the network, many times being dropped by the network and causing inconsistencies and impeding the correct initialization of the cluster.
+Although expected, this instability caused problems when testing in the intended remote environment, many times postponing necessary tests due to unexpected errors, many times not caused by our work. This types of errors made the team investigate and spend time in a problem that we couldn't solve. These problems were predominant in the PostgreSQL cluster, since internally it's components need to establish a replication schema by exchanging control messages through the network, many times being dropped and causing inconsistencies and impeding the correct initialization of the cluster.
 
 The remote infrastructure instability was combated by our continuous local and independent development, preparing all infrastructure and necessary mechanisms to be ready to use when the infrastructure stabilized, enabling our service stack to be correctly initialized and test the necessary scenarios.
 
@@ -467,8 +471,11 @@ It is needless to say that bug and error solving was made along the development 
 Once a stable deployment fulfilling all predefined requirements was completed, this report became our primary concern, with both contributing equally.
 
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+With all the configurations made and the mentioned mechanisms put in place, we have our Pretix service stack ready to be deployed in production mode.
 
-...
+With a deployment plan that takes in consideration load balancing, replication, fault tolerance, availability and scalability, we assure with certain confidence that our system infrastructure can be deployed in any Docker Swarm and fulfils all production requisites. In addition, we also supply the configuration files for a fully tested and compatible monitoring platform using ELK stack and Prometheus+Grafana, that enables any system administrator to maintain Pretix and all the necessary dependencies in a fairly simple fashion.
+
+With all this information any person with the necessary capabilities is able to recreate and also provide a production grade Pretix service. We give our work as concluded and successful since we fulfilled every project requirement and the final product is the proof.
 
 \newpage
 \begin{thebibliography}{9} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -687,6 +694,12 @@ Once a stable deployment fulfilling all predefined requirements was completed, t
   \includegraphics[width=\linewidth]{images/pretixSnmp2Dashboard.png}
   \caption{Populated SNMP Dashboard(Part2).}
   \label{fig:snmp2}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics[width=\linewidth]{images/alerts.png}
+  \caption{Microsoft Teams alert examples.}
+  \label{fig:alerts}
 \end{figure}
 
 \end{document}
