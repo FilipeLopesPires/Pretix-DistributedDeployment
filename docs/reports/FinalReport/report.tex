@@ -475,14 +475,13 @@ It is needless to say that bug and error solving was made along the development 
 Once a stable deployment fulfilling all predefined requirements was completed, this report became our primary concern, with both contributing equally.
 
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-With all the configurations made and the mentioned mechanisms put in place, we have our Pretix service stack ready to be deployed in production mode.
 
-With a deployment plan that takes in consideration load balancing, replication, fault tolerance, availability and scalability, we assure with certain confidence that our system infrastructure can be deployed in any Docker Swarm and fulfils all production requisites. In addition, we also supply the configuration files for a fully tested and compatible monitoring platform using ELK stack and Prometheus+Grafana, that enables any system administrator to maintain Pretix and all the necessary dependencies in a fairly simple fashion.
-
-With the work conducted during these two development phases, we were able to achieve a robust solution for the remote automatic deployment, hosting and operation of Pretix.
+With the work conducted during these two development phases, we were able to achieve a robust solution for the remote automatic deployment, hosting and operation 
+of our Pretix stack in production mode.
 Our delivered code provides a system who's architecture is fully redundant, tolerant to failures, scalable and with a level of automation of great value for the 
 system administrators.
-Moreover, it provides an organized and complete set of monitoring tools centralized in an independent access point.
+Moreover, it provides an organized and complete set of monitoring tools as a centralized platform using ELK stack, Prometheus and Grafana, in an independent 
+access point.
 
 It is our belief that now it is possible to continue the development of the service while ensuring the correct maintenance of what is deployed, i.e. not only 
 is the infrastructure prepared to host online events, but it is also prepared to increment updates to the internal logic without compromising the overall stack 
