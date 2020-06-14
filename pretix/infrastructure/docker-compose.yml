@@ -162,10 +162,11 @@ services:
     environment:
       - REDIS_MASTER=redismaster
       - NAME={{.Task.Name}}
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Task.Name}}/{{.Task.ID}}"
     deploy:
       replicas: 3
       restart_policy:

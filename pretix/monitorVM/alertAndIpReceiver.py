@@ -35,14 +35,16 @@ pg2={}
 # nginx:          7200    7250
 
 def dockerScaleServiceUp(service):
-    service=client.services.get("pretix_"+service)
-    if(service.scale(len(eval(service))+1)):
+    serviceName="pretix_"+service
+    dockerService=client.services.get(serviceName)
+    if(dockerService.scale(len(eval(service))+1)):
         logging.warning("Service "+ service+" scaled up with success.")
 
 
 def dockerScaleServiceDown(service):
-    service=client.services.get("pretix_"+service)
-    if(service.scale(len(eval(service))-1)):
+    serviceName="pretix_"+service
+    dockerService=client.services.get(serviceName)
+    if(dockerService.scale(len(eval(service))-1)):
         logging.warning("Service "+ service+" scaled down with success.")
 
 def changeTargets(service):
@@ -89,12 +91,14 @@ def receiveAlert():
     data=json.loads(request.data)
     logging.warning("Received Alert: "+str(data))
     rule=data["ruleName"]
-    if rule in ["NGINX-Pretix Response Time alert","PRETIX-Number of Events alert[test]","PRETIX-Order POST Time Distribution alert"]:
-        logging.warning("Scaling up service 'web'")
-        dockerScaleServiceUp("web")
-    elif rule in ["REDIS-# Connected Clients alert", "HAPROXY-Proxy Average Response Time of Redis alert"]:
-        logging.warning("Scaling up service 'redisslave'")
-        dockerScaleServiceUp("redisslave")
+    state=data["state"]
+    if state=="alerting":
+        if rule in ["NGINX-Pretix Response Time alert","PRETIX-Number of Events alert[test]","PRETIX-Order POST Time Distribution alert"]:
+            logging.warning("Scaling up service 'web'")
+            dockerScaleServiceUp("web")
+        elif rule in ["REDIS-# Connected Clients alert", "HAPROXY-Proxy Average Response Time of Redis alert"]:
+            logging.warning("Scaling up service 'redisslave'")
+            dockerScaleServiceUp("redisslave")
     return ''
 
 if __name__ == "__main__":
