@@ -177,9 +177,8 @@ As our database is replicated in master/slave mode, Pgpool is able to take advan
 by evenly distributing queries among available servers and consequently improving the overall throughput.
 Pgpool provides other useful features such as connection pooling, where it maintains established connections to the servers and reuses them whenever a new
 connection with the same properties comes in.
-
 For the Redis server cluster \cite{redis}, the adopted solution was the well-known HAProxy \cite{haproxy}.
-The instances installed spread requests evenly across the Redis cluster.
+The instances installed spread requests evenly across the Redis cluster. 
 Here, a master/slave mode was also used, meaning that the proxies interact with master instances that then delegate work among slaves.
 
 Load tests executed during development proved that such additions had a significant impact on the performance of the system.
@@ -286,10 +285,10 @@ Note that the chosen metrics are dependent on what is made available by each com
                         & Avg. Response Time        & 50 seconds               \\
       \hline
       Redis             & Redis Up Time             & -                        \\
-                        & Memory Used               & -                        \\
+      (\& HAProxy)      & Memory Used               & -                        \\
                         & \# of Connections         & -                        \\
                         & \# of Connected clients   & -                        \\
-                        & Avg. Response Time        & -                        \\
+                        & Avg. Response Time        & 30 seconds               \\
       \hline
       PostgreSQL        & Total \# of Queries       & -                        \\
                         & Total \# of Failures      & -                        \\
@@ -361,8 +360,7 @@ After the logs arrive at Logstash, the internal ELK flow was configured so that 
 The system is thus capable of collecting all logs and present them in the Kibana interface.
 Further processing over collected logs can be made if the information is context specific and allows these type of processing, such as counters or other metrics.
 However, in our case this was found unnecessary since we were able to obtain metrics from all the services necessary.
-
-An example of the populated Kibana GUI is present in figure \ref{fig:kibana}.
+Figure \ref{fig:kibana} shows an example of the Kibana GUI.
 
 \subsubsection{Metric Collection}
 
@@ -411,7 +409,8 @@ Our choice for the graphical user interface (GUI) to interact with Prometheus wa
 indicated by the engine itself.
 Grafana allows us to explore the collected metrics, construct meaningful dashboards and configure critical alerts, as we will see further ahead.
 
-Figures \ref{fig:home}, \ref{fig:pretix}, \ref{fig:nginx}, \ref{fig:postgres}, \ref{fig:redis1}, \ref{fig:redis2}, \ref{fig:snmp1} and \ref{fig:snmp2} are all populated examples of all dashboards created, one for each type of service, namely, Nginx, PostgreSQL, Redis, Pretix itself and lastly the SNMP infrastructure monitoring.
+Figures \ref{fig:home} to \ref{fig:snmp2} are all populated examples of the created dashboards, one for each type of service, namely: 
+Nginx, PostgreSQL, Redis, Pretix and the SNMP infrastructure monitoring.
 
 \subsection{Alerts and Automation} \label{management.automation} %%%%%%%%%%%%%%%
 
@@ -429,29 +428,34 @@ Following is a list of the implemented alarms and respective reaction behaviors:
 
 \vspace{-10pt}
 \begin{enumerate}[noitemsep]
-  \item NGINX-Pretix Response Time alert - A new replica of the \texttt{pretix\_web} is created.
-  \item PRETIX-Number of Events alert[test] - A new replica of the \texttt{pretix\_web} is created.
-  \item PRETIX-Order POST Time Distribution alert - A new replica of the \texttt{pretix\_web} is created.
-  \item REDIS-\# Connected Clients alert - A new replica of the \texttt{pretix\_redisslave} is created.
-  \item HAPROXY-Proxy Average Response Time of Redis alert - A new replica of the \\\texttt{pretix\_redisslave} is created.
+  \item NGINX   - Pretix Response Time alert
+  \item PRETIX  - Number of Events alert [for testing purposes]
+  \item PRETIX  - Order POST Time Distribution alert          - On these 3 alerts a new replica of the \texttt{pretix\_web} is created, as they indicate an overload on the existing ones.
+  \item REDIS   - \# Connected Clients alert
+  \item HAPROXY - Proxy Average Response Time of Redis alert  - As Pretix might not be the one causing slower response times, these 2 alerts indicate the Redis cluster is close to its maximum capacity and create a new replica of the \texttt{pretix\_redisslave} to avoid it.
 \end{enumerate}
 \vspace{-10pt}
 
-A note need to be made related to the \texttt{PRETIX-Number of Events alert[test]} alert. This event was created for testing purposes, since we needed a consistent and controlled way to trigger an alert. With the monitoring of the number of events created in Pretix, we were able to establish a low threshold that enabled us to trigger an event just by creating a event in the Pretix platform. With this refined control we were able to test and successfully implement the mechanisms for the mentioned automatic scaling reactions.
-
+Alert number 2 was created for testing purposes only, this was our means to achieve a consistent and controlled manual trigger:
+by defining a low threshold and simply creating Pretix hosted events, the alarm was triggered and the notification channels and the automatic rescaling reaction
+mechanism could easily be tested.
 Figure \ref{fig:alerts} is an example of the alerts received in Microsoft Teams.
 
 \section{Additional Remarks} \label{remarks} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Swarm Stability} \label{remarks.stability} %%%%%%%%%%%%%%%%%%%%%
 
-During the development and configuration of our infrastructure and monitoring facility, we many times resorted to local deployments and tests to allow an independent and frictionless development and evolution in each system's component. However, our infrastructure was intended to be deployed and integrated with Docker's Swarm mode in a remote infrastructure as mentioned in the previous project report.
+We have mentioned the fact that all remote computational resources were shared among developer/operator teams and naturally this had consequences in terms of 
+performance and accessibility, with activity peaks close to delivery dates and occurrences of human errors with generalized consequences.
+Additionally, due to external limitations, maintenance also suffered some difficulties and access to the machines was not 100\% assured.
 
-This environment translation proved to create some unpredicted problems. Our team was totally prepared and all the work developed was completely in sync and compatible with the Swarm mode. The mentioned problems were caused by the infrastructure itself instability, mainly caused by the available connection between the compute nodes. This instability was expected and understandable not only because it is intrinsic of a system in production, but also because all resources were limited, that includes hardware limit by budget, time and maintenance capability being the course teacher the only one in charge of administrating the infrastructure.
-
-Although expected, this instability caused problems when testing in the intended remote environment, many times postponing necessary tests due to unexpected errors, many times not caused by our work. This types of errors made the team investigate and spend time in a problem that we couldn't solve. These problems were predominant in the PostgreSQL cluster, since internally it's components need to establish a replication schema by exchanging control messages through the network, many times being dropped and causing inconsistencies and impeding the correct initialization of the cluster.
-
-The remote infrastructure instability was combated by our continuous local and independent development, preparing all infrastructure and necessary mechanisms to be ready to use when the infrastructure stabilized, enabling our service stack to be correctly initialized and test the necessary scenarios.
+To partially mitigate these limitations, much of our tests and debugging was executed with local deployments to allow an independent and frictionless evolution 
+in each system's component.
+Nevertheless, often we were forced to postpone necessary remote tests due to unexpected errors related to the instability of the connection to the remote 
+hardware and lost time doing research on a problem who's solution wasn't at our reach.
+These problems were predominant in the PostgreSQL cluster, since internally it's components need to establish a replication scheme by exchanging control messages
+through the network; inconsistencies in these exchanges would then prevent the correct initialization of the cluster.
+This was a reality we had to face during the project lifetime, but was fortunately reduced thanks to the efforts of those responsible for the assignment.
 
 \subsection{Assignment Contributions} \label{remarks.contributions} %%%%%%%%%
 
@@ -471,11 +475,28 @@ It is needless to say that bug and error solving was made along the development 
 Once a stable deployment fulfilling all predefined requirements was completed, this report became our primary concern, with both contributing equally.
 
 \section*{Conclusions} \label{conclusions} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-With all the configurations made and the mentioned mechanisms put in place, we have our Pretix service stack ready to be deployed in production mode.
 
-With a deployment plan that takes in consideration load balancing, replication, fault tolerance, availability and scalability, we assure with certain confidence that our system infrastructure can be deployed in any Docker Swarm and fulfils all production requisites. In addition, we also supply the configuration files for a fully tested and compatible monitoring platform using ELK stack and Prometheus+Grafana, that enables any system administrator to maintain Pretix and all the necessary dependencies in a fairly simple fashion.
+With the work conducted during these two development phases, we were able to achieve a robust solution for the remote automatic deployment, hosting and operation 
+of our Pretix stack in production mode.
+Our delivered code provides a system who's architecture is fully redundant, tolerant to failures, scalable and with a level of automation of great value for the 
+system administrators.
+Moreover, it provides an organized and complete set of monitoring tools as a centralized platform using ELK stack, Prometheus and Grafana, in an independent 
+access point.
 
-With all this information any person with the necessary capabilities is able to recreate and also provide a production grade Pretix service. We give our work as concluded and successful since we fulfilled every project requirement and the final product is the proof.
+It is our belief that now it is possible to continue the development of the service while ensuring the correct maintenance of what is deployed, i.e. not only 
+is the infrastructure prepared to host online events, but it is also prepared to increment updates to the internal logic without compromising the overall stack 
+of services.
+
+For future work, the strategy would be to first conduct trials with real users in order to learn more about the system's behavior and determine what areas would 
+benefit from additional automated response measures.
+Although the offered monitoring dashboards already have great detail over the collected data, personalizing them to the specific case of Pretix would also help 
+on providing end users with a better experience.
+Lastly, the limitations of the Pretix service itself should also be addressed in order to improve the user load capacity for activity peaks and take full advantage 
+of the scalability potential of our clusters.
+
+The perspective of operators is perhaps the most valuable knowledge we take from this project.
+Not only it empowered us with the capabilities to address similar projects in the future, it also made us more aware of aspects to take in consideration as 
+software developers in order to improve and take full advantage of the DevOps environment.
 
 \newpage
 \begin{thebibliography}{9} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -584,7 +605,7 @@ With all this information any person with the necessary capabilities is able to 
   \url{https://docker-py.readthedocs.io/en/stable/}.
   Docker Inc.,
   retrieved in June 2020.
-  \vspace{-10pt}
+  \vspace{-10pt} 
 
   % \bibitem{pretixgit}
   % \textit{Pretix Code Repository},
