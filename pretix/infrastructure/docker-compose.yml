@@ -25,10 +25,11 @@ services:
       - /nfs/pretix/postgres/master:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       restart_policy:
         condition: on-failure
@@ -52,10 +53,11 @@ services:
       - /nfs/pretix/postgres/slave1:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       restart_policy:
         condition: on-failure
@@ -79,10 +81,11 @@ services:
       - /nfs/pretix/postgres/slave2:/bitnami/postgresql:rw
     networks:
       - pretixPgNetwork
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       restart_policy:
         condition: on-failure
@@ -108,10 +111,11 @@ services:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
     networks:
       - pretixPgNetwork
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       replicas: 2
       restart_policy:
@@ -129,10 +133,11 @@ services:
       - NAME={{.Task.Name}}
     networks:
       - pretixRedisNetwork
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       replicas: 3
       restart_policy:
@@ -142,10 +147,11 @@ services:
     image: 10.2.0.1:5000/pretixredismaster
     volumes:
       - /nfs/pretix/redis/master:/data:rw
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     environment:
       - NAME={{.Task.Name}}
     networks:
@@ -166,7 +172,7 @@ services:
       driver: syslog
       options:
         syslog-address: "udp://10.5.0.108:5000"
-        tag: "{{.Task.Name}}/{{.Task.ID}}"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       replicas: 3
       restart_policy:
@@ -183,10 +189,11 @@ services:
       - NAME={{.Task.Name}}
     volumes:
       - /nfs/pretix/redis/sentinel:/data:rw
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     networks:
       - pretixRedisNetwork
     deploy:
@@ -215,10 +222,11 @@ services:
     secrets:
       - source: pretixConf
         target: /etc/pretix/pretix.cfg
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       replicas: 6
       restart_policy:
@@ -236,10 +244,11 @@ services:
       - pretixOut
     environment:
       - NAME={{.Task.Name}}
-    # logging:
-    #   driver: syslog
-    #   options:
-    #     syslog-address: "udp://10.5.0.108:5000"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.5.0.108:5000"
+        tag: "{{.Name}}/{{.ID}}"
     deploy:
       replicas: 3
       restart_policy:
