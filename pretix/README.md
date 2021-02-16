@@ -1,17 +1,9 @@
-# GIC - Documentation
+## Directory Structure
 
-## Folder Structure
-
-quickstart - contains a script that creates a basic setup of Pretix in the deployed infrastructure, preparing it for load testing as well.
+quickstart - contains a Python script that creates a basic setup of Pretix in the deployed infrastructure, preparing it for load testing as well.
 
 loadTesting - contains test scripts for evaluating infrastructure performance under high volumes of simultaneous requests.
 
-stackTests - 
+monitorVM - contains the code of the virtual machine used for monitoring the entire infrastructure, resorting to Elastic Search, Kibana, Logstash and Prometheus.
 
-haproxy - (https://github.com/arhea/docker-redis)
-
-## Authors:
-
-Filipe Pires (85122)
-
-João Alegria (85048)
+infrastructure - contains all configurations (local and remote) for the distributed infrastructure that allows hosting the product.
