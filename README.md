@@ -3,7 +3,7 @@
 ## Description:
 
 This project allows the deployment and management of a distributed open-source product.
-The product provided is Pretix (https://github.com/pretix/pretix), a ticket shop application for conferences, festivals, tech events, etc.
+The product provided is [Pretix](https://github.com/pretix/pretix), a ticket shop application for conferences, festivals, tech events, etc.
 The system has a fully-automatic deployment pipeline and is fault tolerant.
 We provide reports on the work developed, the source code and the respective documentation.
 
