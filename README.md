@@ -1,6 +1,6 @@
 # Distributed Deployment and Management of <br /> [Pretix - a Ticket Shop Application](https://github.com/pretix)
 
-## Description:
+## Description
 
 This project allows the deployment and management of a distributed open-source product.
 The product provided is [Pretix](https://github.com/pretix/pretix), a ticket shop application for conferences, festivals, tech events, etc.
@@ -59,7 +59,7 @@ Populated SNMP Dashboard.
 
 Microsoft Teams alert examples.
 
-## Authors:
+## Authors
 
 The authors of this repository are Filipe Pires and João Alegria, and the project was developed for the Computational Infrastructures Management Course of the Master's degree in Informatics Engineering of the University of Aveiro.
 
