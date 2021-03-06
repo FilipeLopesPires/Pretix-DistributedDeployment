@@ -13,9 +13,9 @@ The deployed service is hosted in a Docker Compose Swarm.
 
 ## Repository Structure
 
-docs - contains all documentation (presentation and reports).
+/docs - contains all documentation (presentation and reports).
 
-pretix - contains containers' configurations, performance evaluation scripts and a quickstart script.
+/pretix - contains containers' configurations, performance evaluation scripts and a quickstart script.
 
 ## Additional Resources
 
