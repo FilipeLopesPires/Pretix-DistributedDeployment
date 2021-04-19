@@ -1,5 +1,12 @@
 # Distributed Deployment and Management of <br /> [Pretix - a Ticket Shop Application](https://github.com/pretix)
 
+![](https://img.shields.io/badge/Academical%20Project-Yes-success)
+![](https://img.shields.io/badge/Deployment-Docker%20Compose-blue)
+![](https://img.shields.io/badge/Made%20With-Python-blue)
+![](https://img.shields.io/badge/Platform-Web-blue)
+![](https://img.shields.io/badge/License-MIT-lightgrey)
+![](https://img.shields.io/badge/Maintained-No-red)
+
 ## Description
 
 This project allows the deployment and management of a distributed open-source product.
